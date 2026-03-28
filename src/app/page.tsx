@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -21,11 +21,21 @@ import ExecutiveReport from '@/components/landing/ExecutiveReport';
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [navSolid, setNavSolid] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setNavSolid(window.scrollY > window.innerHeight * 0.8);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className="min-h-screen bg-white text-[#1a1a1a]">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-header">
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navSolid ? 'bg-[#243d30] border-b border-[#1a2e23]' : 'glass-header'}`}>
         <div className="flex items-center justify-between h-16 px-6 lg:px-10">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
@@ -37,15 +47,15 @@ export default function Home() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#problem" className="text-sm text-white/75 hover:text-white transition-colors">Problem</a>
-            <a href="#solution" className="text-sm text-white/75 hover:text-white transition-colors">Solution</a>
-            <a href="#product" className="text-sm text-white/75 hover:text-white transition-colors">Product</a>
-            <a href="#how-it-works" className="text-sm text-white/75 hover:text-white transition-colors">How it works</a>
+            <a href="#problem" className="text-sm font-semibold text-white hover:text-white/80 transition-colors">Problem</a>
+            <a href="#solution" className="text-sm font-semibold text-white hover:text-white/80 transition-colors">Solution</a>
+            <a href="#product" className="text-sm font-semibold text-white hover:text-white/80 transition-colors">Product</a>
+            <a href="#how-it-works" className="text-sm font-semibold text-white hover:text-white/80 transition-colors">How it works</a>
           </div>
 
           {/* CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/login" className="text-sm text-white/75 hover:text-white transition-colors px-3 py-2">
+            <Link href="/login" className="text-sm font-semibold text-white hover:text-white/80 transition-colors px-3 py-2">
               Log in
             </Link>
             <Link href="/login" className="btn-primary text-sm px-4 py-2 rounded-md font-medium">
@@ -186,7 +196,7 @@ export default function Home() {
                   <g>
                     <animate attributeName="opacity" values="0;0;1;0;0" keyTimes="0;0.636;0.646;0.986;1" dur="8s" repeatCount="indefinite" />
                     <circle cx="92" cy="198" r="3" fill="#60a5fa" />
-                    <text x="86" y="210" fill="#60a5fa" fontSize="8" fontFamily="monospace" textAnchor="end">WATER_INDEX: NA</text>
+                    <text x="98" y="194" fill="#60a5fa" fontSize="8" fontFamily="monospace" textAnchor="start">WATER_INDEX: NA</text>
                   </g>
 
                   {/* Blip 3 — appears at ~130° into sweep */}
@@ -205,7 +215,7 @@ export default function Home() {
                 </svg>
 
                 {/* Status card — anchored to bottom-left of radar */}
-                <div className="absolute bottom-[14%] left-[2%] bg-white border border-[#e5e5e5] rounded-lg p-5 card-hover w-72">
+                <div className="absolute bottom-[14%] left-[2%] bg-white border border-[#e5e5e5] rounded-lg p-6 card-hover w-80">
                   <div className="flex items-center gap-3 mb-3">
                     <span className="text-[#888] text-xs font-mono tracking-widest">SYSTEM_STATUS</span>
                     <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
