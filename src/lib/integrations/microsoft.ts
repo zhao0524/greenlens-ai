@@ -1,5 +1,20 @@
 import axios from 'axios'
 
+const MICROSOFT_API_TIMEOUT_MS = 15000
+
+interface MicrosoftServicePlan {
+  servicePlanName?: string
+}
+
+interface MicrosoftSku {
+  skuPartNumber?: string
+  servicePlans?: MicrosoftServicePlan[]
+  prepaidUnits?: {
+    enabled?: number
+  }
+  consumedUnits?: number
+}
+
 export async function getMicrosoftAccessToken(tenantId: string, clientId: string, clientSecret: string) {
   const response = await axios.post(
     `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
@@ -8,7 +23,8 @@ export async function getMicrosoftAccessToken(tenantId: string, clientId: string
       client_id: clientId,
       client_secret: clientSecret,
       scope: 'https://graph.microsoft.com/.default'
-    })
+    }),
+    { timeout: MICROSOFT_API_TIMEOUT_MS }
   )
   return response.data.access_token
 }
@@ -22,7 +38,10 @@ export async function getMicrosoftAccessToken(tenantId: string, clientId: string
 export async function getMicrosoftCopilotUsage(accessToken: string) {
   const response = await axios.get(
     `https://graph.microsoft.com/v1.0/reports/getMicrosoft365CopilotUsageUserDetail(period='D30')`,
-    { headers: { Authorization: `Bearer ${accessToken}` } }
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      timeout: MICROSOFT_API_TIMEOUT_MS
+    }
   )
   return response.data
 }
@@ -30,14 +49,18 @@ export async function getMicrosoftCopilotUsage(accessToken: string) {
 export async function getMicrosoftLicenseDetails(accessToken: string) {
   const response = await axios.get(
     'https://graph.microsoft.com/v1.0/subscribedSkus',
-    { headers: { Authorization: `Bearer ${accessToken}` } }
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      timeout: MICROSOFT_API_TIMEOUT_MS
+    }
   )
-  const copilotLicenses = response.data.value.filter((sku: any) =>
+  const skus: MicrosoftSku[] = response.data.value ?? []
+  const copilotLicenses = skus.filter((sku: MicrosoftSku) =>
     sku.skuPartNumber?.includes('COPILOT') ||
-    sku.servicePlans?.some((plan: any) => plan.servicePlanName?.includes('COPILOT'))
+    sku.servicePlans?.some((plan: MicrosoftServicePlan) => plan.servicePlanName?.includes('COPILOT'))
   )
-  const totalSeats = copilotLicenses.reduce((sum: number, sku: any) => sum + (sku.prepaidUnits?.enabled || 0), 0)
-  const consumedSeats = copilotLicenses.reduce((sum: number, sku: any) => sum + (sku.consumedUnits || 0), 0)
+  const totalSeats = copilotLicenses.reduce((sum: number, sku: MicrosoftSku) => sum + (sku.prepaidUnits?.enabled || 0), 0)
+  const consumedSeats = copilotLicenses.reduce((sum: number, sku: MicrosoftSku) => sum + (sku.consumedUnits || 0), 0)
   return {
     totalSeats,
     consumedSeats,

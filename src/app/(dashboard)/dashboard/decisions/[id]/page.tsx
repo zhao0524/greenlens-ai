@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import AnalysisTriggerScreen from '@/components/dashboard/AnalysisTriggerScreen'
+import { getCompanyAnalysisState } from '@/lib/analysis/get-company-analysis-state'
 
 interface DecisionDetailProps {
   params: Promise<{ id: string }>
@@ -16,8 +17,9 @@ export default async function DecisionDetailPage({ params }: DecisionDetailProps
     .eq('supabase_user_id', user!.id).single()
   const { data: report } = await supabase.from('reports').select('*')
     .eq('company_id', company!.id).order('created_at', { ascending: false }).limit(1).single()
+  const { analysisJob } = await getCompanyAnalysisState(supabase, company!.id)
 
-  if (!report) return <AnalysisTriggerScreen companyId={company!.id} />
+  if (!report) return <AnalysisTriggerScreen companyId={company!.id} initialJobState={analysisJob} />
 
   const decisions = report.strategic_decisions?.decisions
     ?.sort((a: { impactScore: number }, b: { impactScore: number }) => b.impactScore - a.impactScore) ?? []

@@ -1,0 +1,3 @@
+-- Deprecated: use ../DATABASE_FULL_SETUP.sql (single source of truth).
+-- The ON CONFLICT error is fixed by CONSTRAINT companies_supabase_user_id_key UNIQUE (supabase_user_id).
+-- A partial unique INDEX does not work with Supabase upsert.

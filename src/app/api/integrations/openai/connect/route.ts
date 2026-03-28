@@ -2,16 +2,34 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
-  const { apiKey } = await request.json()
-  if (!apiKey || !apiKey.startsWith('sk-')) {
-    return NextResponse.json({ error: 'Invalid API key format' }, { status: 400 })
+  const body = await request.json()
+  const apiKey = typeof body.apiKey === 'string' ? body.apiKey.trim() : ''
+  // User / project / service account secrets all start with sk- (trimmed above).
+  if (!apiKey || !apiKey.startsWith('sk-') || apiKey.length < 20) {
+    return NextResponse.json({
+      error: 'Paste your full secret key from platform.openai.com/api-keys (long string starting with sk-).'
+    }, { status: 400 })
   }
   try {
-    const testResponse = await fetch(
-      'https://api.openai.com/v1/usage?date=' + new Date().toISOString().split('T')[0],
-      { headers: { Authorization: `Bearer ${apiKey}` } }
-    )
-    if (!testResponse.ok) return NextResponse.json({ error: 'API key validation failed' }, { status: 400 })
+    // Validate with /v1/models — works for normal API keys.
+    const testResponse = await fetch('https://api.openai.com/v1/models?limit=1', {
+      headers: { Authorization: `Bearer ${apiKey}` }
+    })
+    if (!testResponse.ok) {
+      const errJson = await testResponse.json().catch(() => null) as {
+        error?: { message?: string }
+      } | null
+      const openaiMsg = errJson?.error?.message
+      let detail: string
+      if (testResponse.status === 401) {
+        detail = openaiMsg
+          ? `${openaiMsg} Create a new key at https://platform.openai.com/api-keys and paste it exactly (no spaces).`
+          : 'OpenAI rejected this key (401). Create a new secret key at https://platform.openai.com/api-keys — copy the full value, no leading/trailing spaces.'
+      } else {
+        detail = openaiMsg ?? `OpenAI returned ${testResponse.status}. Check billing and API access at platform.openai.com.`
+      }
+      return NextResponse.json({ error: detail }, { status: 400 })
+    }
   } catch {
     return NextResponse.json({ error: 'Could not reach OpenAI' }, { status: 400 })
   }

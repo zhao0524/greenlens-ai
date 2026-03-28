@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import AnalysisTriggerScreen from '@/components/dashboard/AnalysisTriggerScreen'
 import IncentiveCard from '@/components/dashboard/IncentiveCard'
+import { getCompanyAnalysisState } from '@/lib/analysis/get-company-analysis-state'
 
 export default async function IncentivesPage() {
   const supabase = await createClient()
@@ -9,8 +10,9 @@ export default async function IncentivesPage() {
     .eq('supabase_user_id', user!.id).single()
   const { data: report } = await supabase.from('reports').select('*')
     .eq('company_id', company!.id).order('created_at', { ascending: false }).limit(1).single()
+  const { analysisJob } = await getCompanyAnalysisState(supabase, company!.id)
 
-  if (!report) return <AnalysisTriggerScreen companyId={company!.id} />
+  if (!report) return <AnalysisTriggerScreen companyId={company!.id} initialJobState={analysisJob} />
 
   const incentives: { title: string; description: string; region: string; estimated_value: string; action_required?: string }[] =
     report.incentives_and_benefits?.incentives ?? []

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface UsageRecord {
   model: string
@@ -9,7 +9,7 @@ interface UsageRecord {
 }
 
 export async function calculateCarbon(usageData: UsageRecord[]) {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const { data: energyLibrary } = await supabase.from('model_energy_library').select('*')
   const { data: regionalData } = await supabase.from('regional_carbon_intensity').select('*')
 

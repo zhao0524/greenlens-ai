@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import AnalysisTriggerScreen from '@/components/dashboard/AnalysisTriggerScreen'
 import DownloadPDFButton from '@/components/dashboard/ESGExport'
+import { getCompanyAnalysisState } from '@/lib/analysis/get-company-analysis-state'
 
 export default async function ESGPage() {
   const supabase = await createClient()
@@ -9,8 +10,9 @@ export default async function ESGPage() {
     .eq('supabase_user_id', user!.id).single()
   const { data: report } = await supabase.from('reports').select('*')
     .eq('company_id', company!.id).order('created_at', { ascending: false }).limit(1).single()
+  const { analysisJob } = await getCompanyAnalysisState(supabase, company!.id)
 
-  if (!report) return <AnalysisTriggerScreen companyId={company!.id} />
+  if (!report) return <AnalysisTriggerScreen companyId={company!.id} initialJobState={analysisJob} />
 
   const esg = report?.esg_disclosure
 
@@ -21,7 +23,7 @@ export default async function ESGPage() {
           <div>
             <h1 className="text-2xl font-bold text-white">AI Environmental Disclosure</h1>
             <p className="text-gray-400">{company?.name}</p>
-            <p className="text-gray-400">Reporting Period: {esg?.reporting_period}</p>
+            <p className="text-gray-400">Reporting Period: {esg?.reporting_period ?? report.reporting_period}</p>
           </div>
           <span className="bg-green-900 text-green-300 px-3 py-1 rounded-full text-sm font-medium">
             GreenLens Verified
@@ -31,24 +33,32 @@ export default async function ESGPage() {
         <div className="grid grid-cols-3 gap-6 mb-8">
           <div className="bg-gray-800 rounded-xl p-4">
             <p className="text-gray-400 text-sm">AI Carbon Footprint</p>
-            <p className="text-3xl font-bold text-white mt-1">{Math.round(esg?.carbon_kg)} kg</p>
+            <p className="text-3xl font-bold text-white mt-1">
+              {Math.round(esg?.carbon_kg ?? report.carbon_kg ?? 0)} kg
+            </p>
             <p className="text-gray-500 text-sm">CO2 equivalent</p>
           </div>
           <div className="bg-gray-800 rounded-xl p-4">
             <p className="text-gray-400 text-sm">AI Water Consumption</p>
-            <p className="text-3xl font-bold text-white mt-1">{Math.round(esg?.water_liters / 1000)}k L</p>
+            <p className="text-3xl font-bold text-white mt-1">
+              {Math.round((esg?.water_liters ?? report.water_liters ?? 0) / 1000)}k L
+            </p>
             <p className="text-gray-500 text-sm">Direct cooling consumption</p>
           </div>
           <div className="bg-gray-800 rounded-xl p-4">
             <p className="text-gray-400 text-sm">Model Efficiency Score</p>
-            <p className="text-3xl font-bold text-white mt-1">{esg?.model_efficiency_score}/100</p>
+            <p className="text-3xl font-bold text-white mt-1">
+              {esg?.model_efficiency_score ?? report.model_efficiency_score ?? '—'}/100
+            </p>
             <p className="text-gray-500 text-sm">vs industry benchmark</p>
           </div>
         </div>
 
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-white mb-3">Disclosure Statement</h2>
-          <div className="text-gray-300 leading-relaxed whitespace-pre-line">{esg?.esg_text}</div>
+          <div className="text-gray-300 leading-relaxed whitespace-pre-line">
+            {esg?.esg_text ?? 'ESG disclosure text will appear here after analysis is complete.'}
+          </div>
         </div>
 
         <div className="mb-8">
@@ -67,7 +77,8 @@ export default async function ESGPage() {
               for the reporting period. Individual messages or conversations are not exposed.
             </p>
             <p className="text-gray-400 text-sm">
-              <span className="text-gray-300 font-medium">Environmental calculations:</span> {esg?.carbon_methodology}
+              <span className="text-gray-300 font-medium">Environmental calculations:</span>{' '}
+              {esg?.carbon_methodology ?? 'Carbon = (tokens × energy_per_token × PUE) × regional_grid_intensity. PUE=1.1 (hyperscale average). Energy intensity from ArXiv 2505.09598. Grid intensity from EPA eGRID 2024 / IEA 2024.'}
             </p>
           </div>
         </div>
@@ -75,7 +86,7 @@ export default async function ESGPage() {
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-white mb-3">Reporting Framework Alignment</h2>
           <div className="flex gap-3 flex-wrap">
-            {esg?.frameworks?.map((f: string) => (
+            {(esg?.frameworks ?? ['CSRD', 'GRI 305', 'IFRS S2', 'CDP']).map((f: string) => (
               <span key={f} className="bg-blue-900 text-blue-300 px-3 py-1 rounded-full text-sm">{f}</span>
             ))}
           </div>

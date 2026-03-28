@@ -1,5 +1,4 @@
 import { getOpenAIUsage } from '@/lib/integrations/openai'
-import { getMicrosoftCopilotUsage } from '@/lib/integrations/microsoft'
 
 export interface NormalizedUsage {
   model: string
@@ -11,7 +10,14 @@ export interface NormalizedUsage {
   behaviorCluster: 'high_frequency_low_token' | 'low_frequency_high_token' | 'uniform'
 }
 
-export async function runUsageAnalyst(integrations: any[]) {
+interface IntegrationRecord {
+  provider: string
+  access_token: string
+}
+
+type RawUsageRecord = Omit<NormalizedUsage, 'behaviorCluster'>
+
+export async function runUsageAnalyst(integrations: IntegrationRecord[]) {
   const allUsage: NormalizedUsage[] = []
   const allDailyCounts: number[] = []
 
@@ -19,15 +25,12 @@ export async function runUsageAnalyst(integrations: any[]) {
     try {
       if (integration.provider === 'openai') {
         const { normalizedUsage, dailyRequestCounts } = await getOpenAIUsage(integration.access_token)
-        allUsage.push(...normalizedUsage.map((u: any) => ({ ...u, behaviorCluster: classifyBehavior(u) })))
+        allUsage.push(...normalizedUsage.map((u: RawUsageRecord) => ({ ...u, behaviorCluster: classifyBehavior(u) })))
         allDailyCounts.push(...dailyRequestCounts)
       }
-      if (integration.provider === 'microsoft') {
-        // Handled by License Intelligence agent
-        await getMicrosoftCopilotUsage(integration.access_token)
-      }
-    } catch (error: any) {
-      console.error(`Usage fetch failed for ${integration.provider}:`, error.message)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      console.error(`Usage fetch failed for ${integration.provider}:`, message)
     }
   }
 
@@ -58,7 +61,7 @@ export async function runUsageAnalyst(integrations: any[]) {
   }
 }
 
-function classifyBehavior(usage: any): NormalizedUsage['behaviorCluster'] {
+function classifyBehavior(usage: RawUsageRecord): NormalizedUsage['behaviorCluster'] {
   if (usage.totalRequests === 0) return 'uniform'
   const avgInput = usage.totalInputTokens / usage.totalRequests
   if (usage.totalRequests > 1000 && avgInput < 500) return 'high_frequency_low_token'

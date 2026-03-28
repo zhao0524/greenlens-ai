@@ -1,17 +1,93 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+
+interface SynthesisOutputs {
+  usage: {
+    frontierModelPercentage?: number
+    normalizedUsage?: unknown[]
+  }
+  carbonWater: {
+    totalCarbonKg?: number
+    totalWaterLiters?: number
+    modelEfficiencyScore?: number
+    totalWaterBottles?: number
+    carbonByModel?: unknown[]
+    alternativeCarbonKg?: number
+    carbonSavingsKg?: number
+    waterSavingsLiters?: number
+    carbonMethodology?: string
+    waterMethodology?: string
+    modelTaskMismatchRate?: number
+    mismatchedModelClusters?: unknown[]
+  }
+  license: {
+    overallUtilizationRate?: number
+  } & Record<string, unknown>
+  translator: {
+    executiveNarrative?: string
+    hypeCycleContext?: string
+    decisions?: unknown[]
+    incentivesAndBenefits?: unknown[]
+    mitigationStrategies?: unknown[]
+    esgDisclosureText?: string
+  }
+  statAnalysis: {
+    anomaly_detection?: {
+      anomaly_detected?: boolean
+    } & Record<string, unknown>
+    usage_trend?: {
+      trend_direction?: string
+    } & Record<string, unknown>
+    carbon_percentile?: {
+      percentile?: number | null
+    } & Record<string, unknown>
+    task_clustering?: unknown
+  }
+}
+
+function parseMissingReportsColumn(message: string) {
+  const match = message.match(/Could not find the '([^']+)' column of 'reports'/)
+  return match?.[1] ?? null
+}
+
+async function insertReportWithFallback(
+  supabase: ReturnType<typeof createAdminClient>,
+  payload: Record<string, unknown>
+) {
+  const nextPayload = { ...payload }
+  const strippedColumns: string[] = []
+
+  while (true) {
+    const { data: report, error } = await supabase.from('reports').insert(nextPayload).select().single()
+
+    if (!error) {
+      if (strippedColumns.length > 0) {
+        console.warn('Reports schema is missing columns; inserted report without:', strippedColumns.join(', '))
+      }
+      return report
+    }
+
+    const missingColumn = parseMissingReportsColumn(error.message)
+    if (!missingColumn || !(missingColumn in nextPayload)) {
+      throw new Error(`Synthesis failed: ${error.message}`)
+    }
+
+    delete nextPayload[missingColumn]
+    strippedColumns.push(missingColumn)
+  }
+}
 
 export async function runSynthesis(
   jobId: string, companyId: string,
-  outputs: { usage: any, carbonWater: any, license: any, translator: any, statAnalysis: any }
+  outputs: SynthesisOutputs
 ) {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data: prevReport } = await supabase.from('reports').select('carbon_kg, water_liters, model_efficiency_score')
-    .eq('company_id', companyId).order('created_at', { ascending: false }).limit(1).single()
+    .eq('company_id', companyId).order('created_at', { ascending: false }).limit(1).maybeSingle()
 
   const reportingPeriod = new Date().toISOString().slice(0, 7)
 
-  const { data: report, error } = await supabase.from('reports').insert({
+  const reportPayload: Record<string, unknown> = {
     company_id: companyId, job_id: jobId, reporting_period: reportingPeriod,
 
     carbon_kg: outputs.carbonWater.totalCarbonKg,
@@ -40,7 +116,8 @@ export async function runSynthesis(
       anomaly_detected: outputs.statAnalysis?.anomaly_detection?.anomaly_detected,
       narrative: outputs.translator.executiveNarrative,
       hype_cycle_context: outputs.translator.hypeCycleContext,
-      decisions_preview: outputs.translator.decisions?.slice(0, 3)
+      decisions_preview: outputs.translator.decisions?.slice(0, 3),
+      mitigation_strategies: outputs.translator.mitigationStrategies,
     },
 
     footprint_detail: {
@@ -103,8 +180,8 @@ export async function runSynthesis(
       water_methodology: outputs.carbonWater.waterMethodology,
       frameworks: ['CSRD', 'GRI 305', 'IFRS S2', 'CDP']
     }
-  }).select().single()
+  }
 
-  if (error) throw new Error(`Synthesis failed: ${error.message}`)
-  return report!.id
+  const report = await insertReportWithFallback(supabase, reportPayload)
+  return report.id
 }

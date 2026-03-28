@@ -1,46 +1,25 @@
 'use client'
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAnalysisJob } from '@/lib/analysis/use-analysis-job'
+import type { AnalysisJobState } from '@/lib/analysis/state'
 
-export default function AnalysisTriggerScreen({ companyId }: { companyId: string }) {
+interface AnalysisTriggerScreenProps {
+  companyId: string
+  initialJobState?: AnalysisJobState | null
+}
+
+export default function AnalysisTriggerScreen({
+  companyId,
+  initialJobState = null,
+}: AnalysisTriggerScreenProps) {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [jobId, setJobId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  const handleTrigger = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/pipeline/trigger', { method: 'POST' })
-      if (!res.ok) throw new Error('Failed to start analysis')
-      const { jobId: id } = await res.json()
-      setJobId(id)
-      pollStatus(id)
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unknown error')
-      setLoading(false)
-    }
-  }
-
-  const pollStatus = (id: string) => {
-    const interval = setInterval(async () => {
-      const res = await fetch(`/api/pipeline/status?jobId=${id}`)
-      const data = await res.json()
-      if (data.status === 'complete') {
-        clearInterval(interval)
-        router.refresh()
-      } else if (data.status === 'failed') {
-        clearInterval(interval)
-        setError(data.error_message || 'Analysis failed')
-        setLoading(false)
-        setJobId(null)
-      }
-    }, 3000)
-  }
+  const { error, jobState, loading, statusMessage, triggerAnalysis } = useAnalysisJob({
+    initialJobState,
+    onComplete: () => router.refresh(),
+  })
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-8">
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-8" data-company-id={companyId}>
       <div className="max-w-lg w-full text-center">
         <div className="w-16 h-16 bg-green-900 rounded-2xl flex items-center justify-center mx-auto mb-6">
           <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,11 +34,16 @@ export default function AnalysisTriggerScreen({ companyId }: { companyId: string
           water impact, and generate strategic recommendations. This takes about 60–90 seconds.
         </p>
 
-        {jobId && loading && (
+        {loading && (
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-6">
             <div className="flex items-center gap-3">
               <div className="w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full animate-spin shrink-0" />
-              <p className="text-gray-300 text-sm">Analysis running… this takes about a minute.</p>
+              <div className="text-left">
+                <p className="text-gray-300 text-sm">Analysis running… this takes about a minute.</p>
+                {statusMessage && (
+                  <p className="text-gray-500 text-xs mt-1">{statusMessage}</p>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -70,12 +54,18 @@ export default function AnalysisTriggerScreen({ companyId }: { companyId: string
           </div>
         )}
 
+        {!loading && jobState?.status === 'failed' && (
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-6">
+            <p className="text-gray-300 text-sm">The last analysis attempt did not finish. You can retry now.</p>
+          </div>
+        )}
+
         <button
-          onClick={handleTrigger}
+          onClick={triggerAnalysis}
           disabled={loading}
           className="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors"
         >
-          {loading ? 'Running analysis…' : 'Run analysis now'}
+          {loading ? 'Running analysis…' : jobState?.status === 'failed' ? 'Retry analysis' : 'Run analysis now'}
         </button>
 
         <p className="text-gray-600 text-xs mt-4">

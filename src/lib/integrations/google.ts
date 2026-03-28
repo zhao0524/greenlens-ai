@@ -1,5 +1,7 @@
 import axios from 'axios'
 
+const GOOGLE_API_TIMEOUT_MS = 15000
+
 export async function getGoogleAccessToken(code: string, redirectUri: string) {
   const response = await axios.post(
     'https://oauth2.googleapis.com/token',
@@ -9,7 +11,8 @@ export async function getGoogleAccessToken(code: string, redirectUri: string) {
       client_secret: process.env.GOOGLE_CLIENT_SECRET!,
       code,
       redirect_uri: redirectUri
-    })
+    }),
+    { timeout: GOOGLE_API_TIMEOUT_MS }
   )
   return response.data
 }
@@ -21,13 +24,19 @@ export async function getGoogleAccessToken(code: string, redirectUri: string) {
 export async function getGoogleWorkspaceLicenses(accessToken: string) {
   const response = await axios.get(
     'https://www.googleapis.com/admin/directory/v1/resellernotify/getwatchdetails',
-    { headers: { Authorization: `Bearer ${accessToken}` } }
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      timeout: GOOGLE_API_TIMEOUT_MS
+    }
   )
 
   // Fetch SKUs for Gemini/AI products via Enterprise License Manager API
   const skusResponse = await axios.get(
     'https://www.googleapis.com/apps/licensing/v1/product/Google-Apps/sku',
-    { headers: { Authorization: `Bearer ${accessToken}` } }
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      timeout: GOOGLE_API_TIMEOUT_MS
+    }
   )
 
   return {
@@ -42,7 +51,8 @@ export async function getGoogleDomainUsers(accessToken: string) {
     'https://www.googleapis.com/admin/directory/v1/users',
     {
       headers: { Authorization: `Bearer ${accessToken}` },
-      params: { customer: 'my_customer', maxResults: 1, fields: 'nextPageToken' }
+      params: { customer: 'my_customer', maxResults: 1, fields: 'nextPageToken' },
+      timeout: GOOGLE_API_TIMEOUT_MS
     }
   )
   return response.data

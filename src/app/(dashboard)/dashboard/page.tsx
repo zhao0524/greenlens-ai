@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import MetricCard from '@/components/dashboard/MetricCard'
 import DecisionCard from '@/components/dashboard/DecisionCard'
 import AnalysisTriggerScreen from '@/components/dashboard/AnalysisTriggerScreen'
+import { getCompanyAnalysisState } from '@/lib/analysis/get-company-analysis-state'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -10,8 +11,16 @@ export default async function DashboardPage() {
     .eq('supabase_user_id', user!.id).single()
   const { data: report } = await supabase.from('reports').select('*')
     .eq('company_id', company!.id).order('created_at', { ascending: false }).limit(1).single()
+  const { analysisJob } = await getCompanyAnalysisState(supabase, company!.id)
 
-  if (!report) return <AnalysisTriggerScreen companyId={company!.id} />
+  if (!report) return <AnalysisTriggerScreen companyId={company!.id} initialJobState={analysisJob} />
+
+  const anomalyDetected = report.anomaly_detected ?? report.stat_analysis?.anomaly_detection?.anomaly_detected ?? false
+  const carbonPercentile = report.carbon_percentile ?? report.stat_analysis?.carbon_percentile?.percentile ?? null
+  const trendDirection = report.trend_direction ?? report.stat_analysis?.usage_trend?.trend_direction ?? 'stable'
+  const mitigationStrategies = report.mitigation_strategies?.strategies
+    ?? report.executive_summary?.mitigation_strategies
+    ?? []
 
   const carbonDelta = report.prev_carbon_kg
     ? Math.round(((report.carbon_kg - report.prev_carbon_kg) / report.prev_carbon_kg) * 100) : null
@@ -26,7 +35,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Anomaly alert */}
-      {report.anomaly_detected && (
+      {anomalyDetected && (
         <div className="bg-yellow-950 border border-yellow-700 rounded-xl p-4 mb-6">
           <p className="text-yellow-300 text-sm font-medium">
             Unusual activity detected this period. Your AI usage spiked significantly above baseline.
@@ -37,17 +46,17 @@ export default async function DashboardPage() {
 
       {/* Top line metrics */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <MetricCard label="Monthly AI Carbon" value={`${Math.round(report.carbon_kg)} kg`}
+        <MetricCard label="Monthly AI Carbon" value={`${Math.round(report.carbon_kg ?? 0)} kg`}
           unit="CO2e" delta={carbonDelta} />
         <MetricCard label="Monthly AI Water"
-          value={`${Math.round(report.water_liters / 1000)}k L`}
-          unit={`~${Math.round(report.executive_summary?.water_bottles / 1000)}k bottles`} />
-        <MetricCard label="Model Efficiency" value={`${report.model_efficiency_score}/100`}
+          value={`${Math.round((report.water_liters ?? 0) / 1000)}k L`}
+          unit={`~${Math.round((report.executive_summary?.water_bottles ?? 0) / 1000)}k bottles`} />
+        <MetricCard label="Model Efficiency" value={`${report.model_efficiency_score ?? '—'}/100`}
           delta={scoreDelta}
-          status={report.model_efficiency_score > 60 ? 'good' : 'warning'} />
+          status={(report.model_efficiency_score ?? 0) > 60 ? 'good' : 'warning'} />
         <MetricCard label="License Utilization"
-          value={`${Math.round(report.license_utilization_rate)}%`}
-          status={report.license_utilization_rate > 75 ? 'good' : 'warning'} />
+          value={`${Math.round(report.license_utilization_rate ?? 0)}%`}
+          status={(report.license_utilization_rate ?? 0) > 75 ? 'good' : 'warning'} />
       </div>
 
       {/* Sector percentile + trend */}
@@ -55,13 +64,13 @@ export default async function DashboardPage() {
         <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
           <p className="text-gray-400 text-sm mb-1">Sector Position</p>
           <p className="text-white font-semibold">
-            {report.carbon_percentile?.toFixed(0)}th percentile for carbon intensity
+            {carbonPercentile != null ? `${carbonPercentile.toFixed(0)}th percentile for carbon intensity` : 'Sector percentile unavailable'}
           </p>
           <p className="text-gray-400 text-sm">{report.benchmark_data?.carbon_percentile?.relative_position}</p>
         </div>
         <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
           <p className="text-gray-400 text-sm mb-1">Usage Trend</p>
-          <p className="text-white font-semibold capitalize">{report.trend_direction}</p>
+          <p className="text-white font-semibold capitalize">{trendDirection}</p>
           <p className="text-gray-400 text-sm">
             Projected 30-day: {report.stat_analysis?.usage_trend?.projected_30d_requests?.toLocaleString()} requests
           </p>
@@ -96,7 +105,7 @@ export default async function DashboardPage() {
             Improving Your Score ({report.model_efficiency_score}/100)
           </h2>
           <div className="space-y-3 mb-8">
-            {report.mitigation_strategies?.strategies?.map((s: { strategy: string; description: string; expectedScoreImprovement: string; timeframe: string }, i: number) => (
+            {mitigationStrategies.map((s: { strategy: string; description: string; expectedScoreImprovement: string; timeframe: string }, i: number) => (
               <div key={i} className="bg-gray-800 border border-gray-700 rounded-xl p-4">
                 <div className="flex justify-between items-start">
                   <div>

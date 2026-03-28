@@ -11,17 +11,38 @@ export default function OnboardingPage() {
     esg_reporting: [] as string[],
     international_offices: [] as string[]
   })
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const handleSubmit = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    await supabase.from('companies').insert({
-      name: form.name, industry: form.industry,
-      headcount_range: form.headcount_range,
-      esg_reporting_obligations: form.esg_reporting,
-      international_offices: form.international_offices,
-      supabase_user_id: user!.id, onboarding_complete: false
-    })
-    router.push('/onboarding/connect')
+    setSaving(true)
+    setSaveError(null)
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) {
+        setSaveError('Session expired. Please log in again.')
+        router.push('/login')
+        return
+      }
+
+      // Upsert so refreshing the page doesn't create a duplicate company
+      const { error: insertError } = await supabase.from('companies').upsert({
+        name: form.name, industry: form.industry,
+        headcount_range: form.headcount_range,
+        esg_reporting_obligations: form.esg_reporting,
+        international_offices: form.international_offices,
+        supabase_user_id: user.id, onboarding_complete: false
+      }, { onConflict: 'supabase_user_id' })
+
+      if (insertError) {
+        setSaveError(`Could not save company: ${insertError.message}`)
+        return
+      }
+
+      router.push('/onboarding/connect')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -80,9 +101,15 @@ export default function OnboardingPage() {
             ))}
           </div>
 
-          <button onClick={handleSubmit} disabled={!form.name || !form.industry}
+          {saveError && (
+            <div className="bg-red-950 border border-red-800 rounded-xl p-3">
+              <p className="text-red-300 text-sm">{saveError}</p>
+            </div>
+          )}
+
+          <button onClick={handleSubmit} disabled={!form.name || !form.industry || saving}
             className="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors">
-            Continue
+            {saving ? 'Saving…' : 'Continue'}
           </button>
         </div>
       </div>

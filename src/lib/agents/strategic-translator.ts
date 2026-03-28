@@ -1,5 +1,5 @@
 import { backboard } from '@/lib/backboard/client'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function runStrategicTranslator(
   threadId: string,
@@ -9,13 +9,18 @@ export async function runStrategicTranslator(
   statResult: any,
   company: any
 ) {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
-  // Load relevant incentives for this company's regions and industry
+  // Load relevant incentives for this company's regions and industry.
+  // Build an OR filter: region matches one of the company's offices, OR region is 'Global'.
+  const offices: string[] = company?.international_offices ?? []
+  const regionFilter = offices.length > 0
+    ? `region.in.(${offices.map((r: string) => r).join(',')}),region.eq.Global`
+    : `region.eq.Global`
   const { data: incentives } = await supabase
     .from('incentives_library')
     .select('*')
-    .or(`region.in.(${(company?.international_offices || ['Global']).join(',')}),region.eq.Global`)
+    .or(regionFilter)
 
   const prompt = `
 You are writing the executive intelligence section of an AI governance and sustainability report.
@@ -100,9 +105,18 @@ Produce 3 mitigation strategies specifically for improving a score of ${carbonWa
   const response = await backboard.sendMessage(threadId, prompt)
 
   try {
-    const cleaned = response.content?.trim().replace(/```json|```/g, '').trim()
-    return JSON.parse(cleaned)
-  } catch {
+    // Backboard may return content in response.content or response.message or response.text
+    const rawText = response?.content ?? response?.message ?? response?.text ?? ''
+    const cleaned = rawText.trim().replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+    if (!cleaned) throw new Error('Empty response from Backboard')
+    const parsed = JSON.parse(cleaned)
+    // Validate that required fields are present
+    if (!parsed.decisions || !Array.isArray(parsed.decisions)) {
+      throw new Error('Invalid response shape from Backboard')
+    }
+    return parsed
+  } catch (err: any) {
+    console.warn('Strategic translator parse error:', err.message, 'Raw response:', JSON.stringify(response)?.slice(0, 200))
     return {
       decisions: [], incentivesAndBenefits: [], mitigationStrategies: [],
       hypeCycleContext: '', executiveNarrative: 'Analysis complete.',

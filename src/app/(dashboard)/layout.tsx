@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import AccountActions from '@/components/dashboard/AccountActions'
 
 const navItems = [
   { href: '/dashboard', label: 'Overview' },
@@ -41,11 +42,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </Link>
           ))}
         </nav>
-        <div className="p-4 border-t border-gray-800">
-          <p className="text-gray-500 text-xs mb-1 truncate">{company.name}</p>
-          <Link href="/onboarding/connect" className="text-gray-500 hover:text-gray-300 text-xs transition-colors">
-            Manage integrations
-          </Link>
+        <div className="p-4 border-t border-gray-800 space-y-3">
+          <div>
+            <p className="text-gray-500 text-xs mb-1 truncate">{company.name}</p>
+            <Link href="/onboarding/connect" className="text-gray-500 hover:text-gray-300 text-xs transition-colors">
+              Manage integrations
+            </Link>
+          </div>
+          <AccountActions />
         </div>
       </aside>
 
