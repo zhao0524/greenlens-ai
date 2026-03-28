@@ -21,6 +21,7 @@ import ExecutiveReport from '@/components/landing/ExecutiveReport';
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [solutionTab, setSolutionTab] = useState(0);
   const [navSolid, setNavSolid] = useState(false);
 
   useEffect(() => {
@@ -93,7 +94,7 @@ export default function Home() {
           {/* Left: Text */}
           <div className="pl-20 lg:pl-28 shrink-0 w-[48%]">
             <h1 className="text-5xl sm:text-6xl lg:text-[5.75rem] font-medium tracking-tight leading-[1.1] mb-10 fade-in-up text-white">
-              Measure the environmental cost of your enterprise AI
+              Measure the environmental cost<br />of your enterprise AI
             </h1>
 
             <div className="flex flex-col sm:flex-row items-start gap-4 fade-in-up animation-delay-100">
@@ -239,51 +240,47 @@ export default function Home() {
       {/* Solution Section */}
       <section id="solution" className="py-24 lg:py-32 bg-white flow-lines">
         <div className="container-custom">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <p className="text-[#4C7060] text-sm font-medium tracking-wide uppercase mb-4">
-                The Solution
-              </p>
-              <h2 className="text-3xl sm:text-4xl font-medium tracking-tight mb-6 text-[#1a1a1a]">
-                One platform for AI sustainability intelligence
-              </h2>
-              <p className="text-[#555] text-lg mb-8">
-                GreenLens AI connects to your existing AI systems, aggregates usage data, and delivers executive-ready insights every month.
-              </p>
+          {/* Centered text */}
+          <div className="text-center max-w-6xl mx-auto mb-10">
+            <p className="text-[#4C7060] text-sm font-medium tracking-wide uppercase mb-4">
+              The Solution
+            </p>
+            <h2 className="text-5xl sm:text-6xl lg:text-7xl font-medium tracking-tight mb-6 text-[#1a1a1a]">
+              One platform for AI sustainability intelligence
+            </h2>
+            <p className="text-[#555] text-2xl">
+              GreenLens AI connects to your existing AI systems, aggregates usage data, and delivers executive-ready insights every month.
+            </p>
+          </div>
 
-              <div className="space-y-4">
-                {[
-                  'Connects to OpenAI, Azure, Microsoft 365, and more',
-                  'Pulls real usage data from AI providers',
-                  'Calculates carbon and water footprint automatically',
-                  'Analyzes license utilization and renewal timing',
-                  'Generates executive-ready recommendations'
-                ].map((item, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-[#4C7060] mt-0.5 flex-shrink-0" strokeWidth={1.5} />
-                    <span className="text-[#333]">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+          {/* Tabs */}
+          <div className="flex justify-center mb-6">
+            <div className="flex gap-1 bg-[#f0f0f0] rounded-full p-1">
               {[
-                { label: 'Carbon Tracked', value: '2.4M', unit: 'kg CO₂e' },
-                { label: 'Water Measured', value: '890K', unit: 'liters' },
-                { label: 'License Savings', value: '$1.2M', unit: 'identified' },
-                { label: 'Reports Generated', value: '12K+', unit: 'monthly' }
-              ].map((stat, index) => (
-                <div
-                  key={index}
-                  className="bg-white border border-[#e5e5e5] p-6 rounded-lg card-hover metric-glow"
+                { id: 0, label: 'Carbon & Water' },
+                { id: 1, label: 'License Utilization' },
+                { id: 2, label: 'Executive Report' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setSolutionTab(tab.id)}
+                  className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                    solutionTab === tab.id
+                      ? 'bg-white text-[#1a1a1a] shadow-sm'
+                      : 'text-[#666] hover:text-[#1a1a1a]'
+                  }`}
                 >
-                  <p className="text-[#666] text-xs uppercase tracking-wide mb-2">{stat.label}</p>
-                  <p className="text-3xl font-medium number-highlight">{stat.value}</p>
-                  <p className="text-[#666] text-sm">{stat.unit}</p>
-                </div>
+                  {tab.label}
+                </button>
               ))}
             </div>
+          </div>
+
+          {/* Media placeholder */}
+          <div className="w-full rounded-2xl bg-[#e5e5e5] aspect-[16/9] flex items-center justify-center border border-[#d4d4d4]">
+            <span className="text-[#aaa] text-sm font-medium tracking-wide">
+              {['Carbon & Water dashboard', 'License Utilization dashboard', 'Executive Report'][solutionTab]}
+            </span>
           </div>
         </div>
       </section>
