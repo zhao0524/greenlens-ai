@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import MetricCard from '@/components/dashboard/MetricCard'
 import DecisionCard from '@/components/dashboard/DecisionCard'
 import AnalysisTriggerScreen from '@/components/dashboard/AnalysisTriggerScreen'
+import RerunAnalysisButton from '@/components/dashboard/RerunAnalysisButton'
 import { getCompanyAnalysisState } from '@/lib/analysis/get-company-analysis-state'
 
 export default async function DashboardPage() {
@@ -29,9 +30,12 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">AI Intelligence Brief</h1>
-        <p className="text-gray-400 mt-1">{company!.name} · {report.reporting_period}</p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-white">AI Intelligence Brief</h1>
+          <p className="text-gray-400 mt-1">{company!.name} · {report.reporting_period}</p>
+        </div>
+        <RerunAnalysisButton />
       </div>
 
       {/* Anomaly alert */}

@@ -4,7 +4,7 @@
 // Docs: https://docs.backboard.io
 
 const BASE_URL = 'https://app.backboard.io/api'
-const BACKBOARD_TIMEOUT_MS = 20000
+const BACKBOARD_TIMEOUT_MS = 120000
 
 function headers(json = true) {
   const h: Record<string, string> = {

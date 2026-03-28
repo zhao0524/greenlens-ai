@@ -3,6 +3,9 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
+/** Slightly longer than server OpenAI timeout so the API can return a JSON error first. */
+const CONNECT_FETCH_TIMEOUT_MS = 25_000
+
 const INTEGRATIONS = [
   {
     id: 'microsoft', name: 'Microsoft 365',
@@ -90,22 +93,33 @@ function ConnectPageInner() {
   const handleOpenAISave = async () => {
     setSaving(true)
     setError(null)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), CONNECT_FETCH_TIMEOUT_MS)
     try {
       const res = await fetch('/api/integrations/openai/connect', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: openaiKey.trim() })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: openaiKey.trim() }),
+        signal: controller.signal
       })
       if (res.ok) {
         setConnected(prev => prev.includes('openai') ? prev : [...prev, 'openai'])
         setOpenaiKey('')
       } else {
-        const data = await res.json()
-        setError(data.error ?? 'API key invalid or could not be verified.')
+        const data = await res.json().catch(() => ({}))
+        setError((data as { error?: string }).error ?? 'API key invalid or could not be verified.')
       }
-    } catch {
-      setError('Could not reach OpenAI. Check your internet connection.')
+    } catch (e) {
+      const name = e instanceof Error ? e.name : ''
+      if (name === 'AbortError' || name === 'TimeoutError') {
+        setError('Request timed out. Check your connection and try again.')
+      } else {
+        setError('Could not reach the app server. Check your internet connection.')
+      }
+    } finally {
+      clearTimeout(timeoutId)
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   return (

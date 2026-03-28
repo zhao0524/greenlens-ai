@@ -1,4 +1,9 @@
 import axios from 'axios'
+import {
+  DEMO_SENTINEL_MICROSOFT,
+  getFakeMicrosoftLicenseDetails,
+  getFakeMicrosoftCopilotUsage,
+} from '@/lib/demo/fake-data'
 
 const MICROSOFT_API_TIMEOUT_MS = 15000
 
@@ -36,6 +41,8 @@ export async function getMicrosoftAccessToken(tenantId: string, clientId: string
 // Individual user prompts, responses, or conversation content are never accessible
 // through this API. This is organizational-level deployment data, not individual surveillance.
 export async function getMicrosoftCopilotUsage(accessToken: string) {
+  if (accessToken === DEMO_SENTINEL_MICROSOFT) return getFakeMicrosoftCopilotUsage()
+
   const response = await axios.get(
     `https://graph.microsoft.com/v1.0/reports/getMicrosoft365CopilotUsageUserDetail(period='D30')`,
     {
@@ -47,6 +54,8 @@ export async function getMicrosoftCopilotUsage(accessToken: string) {
 }
 
 export async function getMicrosoftLicenseDetails(accessToken: string) {
+  if (accessToken === DEMO_SENTINEL_MICROSOFT) return getFakeMicrosoftLicenseDetails()
+
   const response = await axios.get(
     'https://graph.microsoft.com/v1.0/subscribedSkus',
     {

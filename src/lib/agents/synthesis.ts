@@ -55,8 +55,12 @@ async function insertReportWithFallback(
 ) {
   const nextPayload = { ...payload }
   const strippedColumns: string[] = []
+  let attempts = 0
 
   while (true) {
+    if (++attempts > 20) {
+      throw new Error(`Synthesis failed: exceeded 20 insert attempts. Stripped columns: ${strippedColumns.join(', ')}`)
+    }
     const { data: report, error } = await supabase.from('reports').insert(nextPayload).select().single()
 
     if (!error) {

@@ -4,7 +4,7 @@ import { backboard, FALLBACK_TRANSLATOR_OUTPUT } from '@/lib/backboard/client'
 import { runUsageAnalyst } from './usage-analyst'
 import { runCarbonWaterAccountant } from './carbon-water-accountant'
 import { runLicenseIntelligence } from './license-intelligence'
-import { runStrategicTranslator } from './strategic-translator'
+import { runStrategicTranslator, runStrategicTranslatorGemini } from './strategic-translator'
 import { runSynthesis } from './synthesis'
 import { runStatAnalysis } from '@/lib/analysis/run-stat-analysis'
 
@@ -69,7 +69,7 @@ export async function runPipeline(jobId: string, companyId: string) {
     const usageResult = await withTimeout('Usage analyst', runUsageAnalyst(integrations || []), 20000)
     await saveOutput('usage_analyst', usageResult)
     if (threadId) {
-      await backboard.sendMessage(threadId, JSON.stringify({
+      backboard.sendMessage(threadId, JSON.stringify({
         event: 'agent_complete', agent: 'usage_analyst', findings: usageResult
       })).catch(e => console.warn('Backboard message failed:', e.message))
     }
@@ -84,7 +84,7 @@ export async function runPipeline(jobId: string, companyId: string) {
     })
     await saveOutput('stat_analysis', statResult)
     if (threadId) {
-      await backboard.sendMessage(threadId, JSON.stringify({
+      backboard.sendMessage(threadId, JSON.stringify({
         event: 'stat_analysis_complete', findings: statResult
       })).catch(e => console.warn('Backboard message failed:', e.message))
     }
@@ -94,7 +94,7 @@ export async function runPipeline(jobId: string, companyId: string) {
     const carbonWaterResult = await runCarbonWaterAccountant(usageResult, statResult)
     await saveOutput('carbon_water_accountant', carbonWaterResult)
     if (threadId) {
-      await backboard.sendMessage(threadId, JSON.stringify({
+      backboard.sendMessage(threadId, JSON.stringify({
         event: 'agent_complete', agent: 'carbon_water_accountant', findings: carbonWaterResult
       })).catch(e => console.warn('Backboard message failed:', e.message))
     }
@@ -104,7 +104,7 @@ export async function runPipeline(jobId: string, companyId: string) {
     const licenseResult = await withTimeout('License intelligence', runLicenseIntelligence(integrations || []), 20000)
     await saveOutput('license_intelligence', licenseResult)
     if (threadId) {
-      await backboard.sendMessage(threadId, JSON.stringify({
+      backboard.sendMessage(threadId, JSON.stringify({
         event: 'agent_complete', agent: 'license_intelligence', findings: licenseResult
       })).catch(e => console.warn('Backboard message failed:', e.message))
     }
@@ -120,12 +120,30 @@ export async function runPipeline(jobId: string, companyId: string) {
           25000
         )
       } catch (translatorErr: any) {
-        console.warn('Strategic translator unavailable, using fallback translation:', translatorErr.message)
-        translatorResult = buildFallbackTranslation(usageResult, carbonWaterResult, licenseResult, statResult, company)
+        console.warn('Backboard strategic translator failed, falling back to Gemini:', translatorErr.message)
+        try {
+          translatorResult = await withTimeout(
+            'Strategic translator (Gemini)',
+            runStrategicTranslatorGemini(usageResult, carbonWaterResult, licenseResult, statResult, company),
+            35000
+          )
+        } catch (geminiErr: any) {
+          console.warn('Gemini strategic translator unavailable, using deterministic fallback:', geminiErr.message)
+          translatorResult = buildFallbackTranslation(usageResult, carbonWaterResult, licenseResult, statResult, company)
+        }
       }
     } else {
-      // No Backboard — generate basic mitigation strategies and incentives from data
-      translatorResult = buildFallbackTranslation(usageResult, carbonWaterResult, licenseResult, statResult, company)
+      // No Backboard thread — try Gemini directly
+      try {
+        translatorResult = await withTimeout(
+          'Strategic translator (Gemini)',
+          runStrategicTranslatorGemini(usageResult, carbonWaterResult, licenseResult, statResult, company),
+          35000
+        )
+      } catch (geminiErr: any) {
+        console.warn('Gemini strategic translator unavailable, using deterministic fallback:', geminiErr.message)
+        translatorResult = buildFallbackTranslation(usageResult, carbonWaterResult, licenseResult, statResult, company)
+      }
     }
     await saveOutput('strategic_translator', translatorResult)
 

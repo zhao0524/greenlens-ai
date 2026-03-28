@@ -1,18 +1,9 @@
 import { backboard } from '@/lib/backboard/client'
+import { generateWithGemini } from '@/lib/gemini/client'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-export async function runStrategicTranslator(
-  threadId: string,
-  usageResult: any,
-  carbonWaterResult: any,
-  licenseResult: any,
-  statResult: any,
-  company: any
-) {
+async function loadIncentives(company: any) {
   const supabase = createAdminClient()
-
-  // Load relevant incentives for this company's regions and industry.
-  // Build an OR filter: region matches one of the company's offices, OR region is 'Global'.
   const offices: string[] = company?.international_offices ?? []
   const regionFilter = offices.length > 0
     ? `region.in.(${offices.map((r: string) => r).join(',')}),region.eq.Global`
@@ -21,8 +12,18 @@ export async function runStrategicTranslator(
     .from('incentives_library')
     .select('*')
     .or(regionFilter)
+  return incentives
+}
 
-  const prompt = `
+function buildPrompt(
+  usageResult: any,
+  carbonWaterResult: any,
+  licenseResult: any,
+  statResult: any,
+  company: any,
+  incentives: any[]
+) {
+  return `
 You are writing the executive intelligence section of an AI governance and sustainability report.
 Your audience is a CTO, CFO, or Chief Sustainability Officer at a large enterprise.
 Plain English only. No technical jargon.
@@ -101,22 +102,62 @@ Return ONLY valid JSON. No markdown. No explanation.
 Produce 2-4 decisions. Sort by impactScore descending. Produce 2-3 incentives most relevant to this company.
 Produce 3 mitigation strategies specifically for improving a score of ${carbonWaterResult.modelEfficiencyScore}/100.
 `
+}
+
+function parseTranslatorResponse(rawText: string, source: string) {
+  const cleaned = rawText.trim().replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+  if (!cleaned) throw new Error(`Empty response from ${source}`)
+  const parsed = JSON.parse(cleaned)
+  if (!parsed.decisions || !Array.isArray(parsed.decisions)) {
+    throw new Error(`Invalid response shape from ${source}`)
+  }
+  return parsed
+}
+
+// Backboard path — uses persistent thread with accumulated agent context
+export async function runStrategicTranslator(
+  threadId: string,
+  usageResult: any,
+  carbonWaterResult: any,
+  licenseResult: any,
+  statResult: any,
+  company: any
+) {
+  const incentives = await loadIncentives(company)
+  const prompt = buildPrompt(usageResult, carbonWaterResult, licenseResult, statResult, company, incentives ?? [])
 
   const response = await backboard.sendMessage(threadId, prompt)
 
   try {
-    // Backboard may return content in response.content or response.message or response.text
     const rawText = response?.content ?? response?.message ?? response?.text ?? ''
-    const cleaned = rawText.trim().replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-    if (!cleaned) throw new Error('Empty response from Backboard')
-    const parsed = JSON.parse(cleaned)
-    // Validate that required fields are present
-    if (!parsed.decisions || !Array.isArray(parsed.decisions)) {
-      throw new Error('Invalid response shape from Backboard')
-    }
-    return parsed
+    return parseTranslatorResponse(rawText, 'Backboard')
   } catch (err: any) {
     console.warn('Strategic translator parse error:', err.message, 'Raw response:', JSON.stringify(response)?.slice(0, 200))
+    return {
+      decisions: [], incentivesAndBenefits: [], mitigationStrategies: [],
+      hypeCycleContext: '', executiveNarrative: 'Analysis complete.',
+      esgDisclosureText: 'AI environmental data available in detailed report sections.'
+    }
+  }
+}
+
+// Gemini path — stateless, all data passed in a single prompt
+export async function runStrategicTranslatorGemini(
+  usageResult: any,
+  carbonWaterResult: any,
+  licenseResult: any,
+  statResult: any,
+  company: any
+) {
+  const incentives = await loadIncentives(company)
+  const prompt = buildPrompt(usageResult, carbonWaterResult, licenseResult, statResult, company, incentives ?? [])
+
+  const rawText = await generateWithGemini(prompt)
+
+  try {
+    return parseTranslatorResponse(rawText, 'Gemini')
+  } catch (err: any) {
+    console.warn('Gemini strategic translator parse error:', err.message, 'Raw response:', rawText?.slice(0, 200))
     return {
       decisions: [], incentivesAndBenefits: [], mitigationStrategies: [],
       hypeCycleContext: '', executiveNarrative: 'Analysis complete.',
