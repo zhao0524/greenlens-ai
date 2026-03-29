@@ -15,7 +15,7 @@ const INTEGRATIONS = [
   },
   {
     id: 'google', name: 'Google Workspace',
-    description: 'Gemini for Workspace license utilization via Google Admin SDK. Read-only.',
+    description: 'Gemini license deployment and 30-day admin activity via Google Workspace APIs. Usage-derived carbon reporting comes later.',
     badge: null, connectUrl: '/api/integrations/google/connect', type: 'oauth'
   },
   {

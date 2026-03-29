@@ -10,6 +10,7 @@
 
 export const DEMO_SENTINEL_OPENAI = 'DEMO_NOVATECH_OPENAI'
 export const DEMO_SENTINEL_MICROSOFT = 'DEMO_NOVATECH_MICROSOFT'
+export const DEMO_SENTINEL_GOOGLE = 'DEMO_NOVATECH_GOOGLE'
 
 function getDemoRunPhase(demoRunIndex: number) {
   if (demoRunIndex <= 1) return 0
@@ -198,4 +199,57 @@ export function getFakeMicrosoftCopilotUsage() {
     copilotLastActivityDate: null,
   }))
   return { value: [...activeUsers, ...inactiveUsers] }
+}
+
+// ---------------------------------------------------------------------------
+// Google Workspace Gemini license/activity data
+// 180 Gemini seats licensed, 96 distinct active users in the trailing 30 days.
+// Domain size is larger than the Gemini deployment to reflect staged rollout.
+// ---------------------------------------------------------------------------
+
+export function getFakeGoogleLicenseAssignments() {
+  return Array.from({ length: 180 }, (_, index) => ({
+    userId: `gemini-user-${index + 1}@novatech.example`,
+    skuId: index < 120 ? '1010470003' : '1010470001',
+    skuName: index < 120 ? 'Gemini Business' : 'Gemini Enterprise',
+    productId: '101047',
+    productName: 'Gemini',
+  }))
+}
+
+export function getFakeGoogleDirectoryUsers() {
+  return Array.from({ length: 420 }, (_, index) => ({
+    id: `google-user-${index + 1}`,
+    primaryEmail: `user-${index + 1}@novatech.example`,
+  }))
+}
+
+export function getFakeGoogleGeminiActivities() {
+  return Array.from({ length: 96 }, (_, index) => {
+    const activityDay = ((index % 28) + 1).toString().padStart(2, '0')
+    return [
+      {
+        id: {
+          time: `2026-03-${activityDay}T12:00:00.000Z`,
+          uniqueQualifier: `activity-${index + 1}-a`,
+          applicationName: 'gemini_in_workspace_apps',
+        },
+        actor: {
+          email: `gemini-user-${index + 1}@novatech.example`,
+          profileId: `profile-${index + 1}`,
+        },
+      },
+      {
+        id: {
+          time: `2026-03-${activityDay}T18:30:00.000Z`,
+          uniqueQualifier: `activity-${index + 1}-b`,
+          applicationName: 'gemini_in_workspace_apps',
+        },
+        actor: {
+          email: `gemini-user-${index + 1}@novatech.example`,
+          profileId: `profile-${index + 1}`,
+        },
+      },
+    ]
+  }).flat()
 }

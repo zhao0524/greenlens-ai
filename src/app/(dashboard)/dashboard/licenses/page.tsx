@@ -25,13 +25,13 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
   // license_intelligence is stored as the raw output from runLicenseIntelligence,
   // which uses camelCase field names.
   const license = report.license_intelligence as {
-    providers: { provider: string; totalSeats: number; activeSeats: number; dormantSeats: number; utilizationRate: number; estimatedAnnualCost: number; potentialSavingsAtRenewal: number; recommendation: string }[]
+    providers: { provider: string; totalSeats: number; activeSeats: number; dormantSeats: number; utilizationRate: number; estimatedAnnualCost: number | null; potentialSavingsAtRenewal: number | null; recommendation: string }[]
     totalLicensedSeats: number
     totalActiveSeats: number
     totalDormantSeats: number
-    overallUtilizationRate: number
-    estimatedAnnualLicenseCost: number
-    potentialAnnualSavings: number
+    overallUtilizationRate: number | null
+    estimatedAnnualLicenseCost: number | null
+    potentialAnnualSavings: number | null
     renewalAlerts: { provider: string; monthsToRenewal: number; renewalDate: string; actionRequired: string }[]
   } | null
 
@@ -45,7 +45,7 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
       {!licenseAvailable && (
         <SectionAvailabilityNotice
           title="License analysis unavailable"
-          message={sectionAvailability.license.message ?? 'Connect Microsoft 365 and rerun analysis to populate this section.'}
+          message={sectionAvailability.license.message ?? 'Connect Microsoft 365 or Google Workspace and rerun analysis to populate this section.'}
         />
       )}
 
@@ -79,11 +79,15 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
         <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
           <p className="text-gray-400 text-sm">Annual Savings Potential</p>
           <p className="text-3xl font-bold text-green-400 mt-1">
-            {license?.potentialAnnualSavings
+            {license?.potentialAnnualSavings != null
               ? `$${Math.round(license.potentialAnnualSavings / 1000)}k`
               : '—'}
           </p>
-          <p className="text-gray-500 text-xs mt-1">at renewal with right-sizing</p>
+          <p className="text-gray-500 text-xs mt-1">
+            {license?.potentialAnnualSavings != null
+              ? 'at renewal with right-sizing'
+              : 'Not modeled for all connected providers'}
+          </p>
         </div>
       </div>
 
@@ -113,11 +117,15 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs">Est. Annual Cost</p>
-                    <p className="text-white">${p.estimatedAnnualCost?.toLocaleString()}</p>
+                    <p className="text-white">
+                      {p.estimatedAnnualCost != null ? `$${p.estimatedAnnualCost.toLocaleString()}` : '—'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs">Savings at Renewal</p>
-                    <p className="text-green-400">${p.potentialSavingsAtRenewal?.toLocaleString()}</p>
+                    <p className="text-green-400">
+                      {p.potentialSavingsAtRenewal != null ? `$${p.potentialSavingsAtRenewal.toLocaleString()}` : '—'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -152,20 +160,20 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
       )}
 
       {/* Cost analysis */}
-      {license?.estimatedAnnualLicenseCost != null && (
+      {license?.estimatedAnnualLicenseCost != null && license?.potentialAnnualSavings != null && (
         <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
           <h3 className="text-white font-semibold mb-3">Cost Analysis</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-gray-400 text-sm">Current annual spend</p>
               <p className="text-white text-lg font-semibold">
-                ${license.estimatedAnnualLicenseCost?.toLocaleString()}
+                ${license.estimatedAnnualLicenseCost.toLocaleString()}
               </p>
             </div>
             <div>
               <p className="text-gray-400 text-sm">Optimised annual spend</p>
               <p className="text-green-400 text-lg font-semibold">
-                ${(license.estimatedAnnualLicenseCost - (license.potentialAnnualSavings ?? 0)).toLocaleString()}
+                ${(license.estimatedAnnualLicenseCost - license.potentialAnnualSavings).toLocaleString()}
               </p>
             </div>
           </div>
@@ -177,7 +185,7 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
         <div className="bg-gray-800 border border-gray-700 rounded-xl p-8 text-center">
           <p className="text-gray-400">No license data available.</p>
           <p className="text-gray-500 text-sm mt-2">
-            Connect a Microsoft 365 integration to see seat utilization.
+            Connect Microsoft 365 or Google Workspace to see seat utilization.
           </p>
         </div>
       )}

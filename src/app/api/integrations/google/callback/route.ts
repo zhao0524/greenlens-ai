@@ -62,7 +62,9 @@ export async function GET(request: Request) {
     const persistenceError = await persistOAuthIntegration(supabase, {
       company_id: company.id, provider: 'google',
       access_token, refresh_token,
-      token_expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
+      token_expires_at: expires_in
+        ? new Date(Date.now() + expires_in * 1000).toISOString()
+        : null,
       is_active: true
     })
 

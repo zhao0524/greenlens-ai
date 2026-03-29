@@ -29,8 +29,8 @@ interface LicenseSummary {
   totalActiveSeats?: number
   totalDormantSeats?: number
   overallUtilizationRate?: number | null
-  estimatedAnnualLicenseCost?: number
-  potentialAnnualSavings?: number
+  estimatedAnnualLicenseCost?: number | null
+  potentialAnnualSavings?: number | null
   renewalAlerts?: unknown[]
 }
 
@@ -98,6 +98,13 @@ function buildPrompt(
   company: CompanyProfile,
   incentives: Array<Record<string, unknown>>
 ) {
+  const annualLicenseCost = licenseResult.estimatedAnnualLicenseCost != null
+    ? `$${licenseResult.estimatedAnnualLicenseCost.toLocaleString()}`
+    : 'Not modeled for all connected license providers.'
+  const potentialRenewalSavings = licenseResult.potentialAnnualSavings != null
+    ? `$${licenseResult.potentialAnnualSavings.toLocaleString()}`
+    : 'Not modeled for all connected license providers.'
+
   return `
 You are writing the executive intelligence section of an AI governance and sustainability report.
 Your audience is a CTO, CFO, or Chief Sustainability Officer at a large enterprise.
@@ -119,8 +126,8 @@ ${carbonWaterResult.waterSavingsLiters?.toLocaleString()} liters per month.
 
 License: ${licenseResult.totalLicensedSeats} licensed seats, ${licenseResult.totalActiveSeats} active,
 ${licenseResult.totalDormantSeats} dormant. Utilization: ${licenseResult.overallUtilizationRate}%.
-Annual license cost: $${licenseResult.estimatedAnnualLicenseCost?.toLocaleString()}.
-Potential renewal savings: $${licenseResult.potentialAnnualSavings?.toLocaleString()}.
+Annual license cost: ${annualLicenseCost}.
+Potential renewal savings: ${potentialRenewalSavings}.
 Renewal alerts: ${JSON.stringify(licenseResult.renewalAlerts)}.
 
 Statistical analysis:

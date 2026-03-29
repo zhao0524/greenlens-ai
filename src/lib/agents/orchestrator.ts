@@ -755,15 +755,17 @@ export async function runPipeline(jobId: string, companyId: string) {
 }
 
 function buildLicenseRightsizingDecision(license: LicenseIntelligenceResult) {
+  const potentialAnnualSavings = license.potentialAnnualSavings ?? 0
+
   return {
     title: 'Right-size AI licenses at renewal',
     situation: `${license.totalDormantSeats} of ${license.totalLicensedSeats} licensed seats are inactive. Reducing seat count at renewal captures immediate savings.`,
     carbonSavedKg: 0,
     waterSavedLiters: 0,
-    financialImpact: `$${license.potentialAnnualSavings?.toLocaleString()}/year`,
+    financialImpact: `$${potentialAnnualSavings.toLocaleString()}/year`,
     theDecision: 'Reduce licensed seat count to active users plus a 15% buffer.',
     teamEffort: 'Procurement action at renewal date',
-    riskOfInaction: `$${license.potentialAnnualSavings?.toLocaleString()} in wasted spend annually.`,
+    riskOfInaction: `$${potentialAnnualSavings.toLocaleString()} in wasted spend annually.`,
     urgency: 'Act Before Renewal',
     impactScore: 7,
   }
@@ -777,7 +779,7 @@ function buildPartialTranslation(
 ) {
   const decisions: any[] = []
 
-  if (license.availability.status === 'available' && license.potentialAnnualSavings > 0) {
+  if (license.availability.status === 'available' && (license.potentialAnnualSavings ?? 0) > 0) {
     decisions.push(buildLicenseRightsizingDecision(license))
   }
 
@@ -787,8 +789,9 @@ function buildPartialTranslation(
 
   const usageMessage = usage.availability.message
     ?? 'Supported usage data is unavailable in this build.'
+  const availableLicenseProviders = license.providers.map((provider) => provider.provider).join(', ')
   const licenseMessage = license.availability.status === 'available'
-    ? `Microsoft 365 license utilization is available: ${license.overallUtilizationRate}% across ${license.totalLicensedSeats} seats.`
+    ? `License utilization is available${availableLicenseProviders ? ` for ${availableLicenseProviders}` : ''}: ${license.overallUtilizationRate}% across ${license.totalLicensedSeats} seats.`
     : license.availability.message ?? 'No supported license analysis is available.'
 
   return {
@@ -810,7 +813,7 @@ function buildPartialTranslation(
       usageMessage,
       'Usage-derived environmental metrics were not calculated because a supported usage provider was not connected.',
       license.availability.status === 'available'
-        ? `Microsoft 365 license utilization remained available at ${license.overallUtilizationRate}% across ${license.totalLicensedSeats} seats.`
+        ? `License utilization remained available at ${license.overallUtilizationRate}% across ${license.totalLicensedSeats} seats.`
         : '',
     ].filter(Boolean).join(' '),
   }
@@ -836,7 +839,7 @@ function buildFallbackTranslation(usage: any, carbonWater: any, license: any, st
     })
   }
 
-  if (license.potentialAnnualSavings > 0) {
+  if ((license.potentialAnnualSavings ?? 0) > 0) {
     decisions.push(buildLicenseRightsizingDecision(license))
   }
 

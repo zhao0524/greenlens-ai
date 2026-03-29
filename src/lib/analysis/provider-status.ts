@@ -61,7 +61,7 @@ export function supportsProviderCapability(
     return provider === 'openai'
   }
 
-  return provider === 'microsoft'
+  return provider === 'microsoft' || provider === 'google'
 }
 
 export function buildSectionAvailability(
