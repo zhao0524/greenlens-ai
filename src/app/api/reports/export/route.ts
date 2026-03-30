@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import React from 'react'
 import {
   Document, Page, Text, View, StyleSheet, renderToBuffer,
+  Svg, Path, Line, G, Circle,
 } from '@react-pdf/renderer'
 import { createClient } from '@/lib/supabase/server'
 import { getPreferredReport } from '@/lib/reports/get-preferred-report'
@@ -1175,7 +1176,85 @@ function EsgPDF({
         title: 'Hype Cycle & Benchmark Analysis',
         lead: 'Gartner positioning, first-mover advantage, and peer benchmarking for AI environmental data.',
       }),
-      React.createElement(Text, { style: { ...styles.bodyMuted, marginBottom: 6 } }, 'Current GenAI / LLM Hype Cycle Position'),
+      React.createElement(Text, { style: { ...styles.bodyMuted, marginBottom: 8 } }, 'Gartner Hype Cycle — Current GenAI / LLM Position'),
+
+      // ── Hype Cycle SVG chart ─────────────────────────────────────────────────
+      // Viewbox: 500 × 220  (points: x from 0-500, y from 0-200 inverted)
+      // Curve: Technology Trigger (x=40) → Peak (x=160,y=15) → Trough (x=280,y=165)
+      //        → Slope (x=390,y=80) → Plateau (x=480,y=95)
+      React.createElement(View, { style: { marginBottom: 14, alignItems: 'center' } },
+        React.createElement(Svg as unknown as React.ComponentType<{ width: number; height: number; viewBox: string; style?: object }>,
+          { width: 450, height: 200, viewBox: '0 0 500 220' },
+
+          // Background fill
+          React.createElement(Path as unknown as React.ComponentType<{ d: string; fill: string; stroke?: string }>,
+            { d: 'M0 0 H500 V220 H0 Z', fill: BG_CARD }
+          ),
+
+          // Axis lines
+          React.createElement(Line as unknown as React.ComponentType<{ x1: number; y1: number; x2: number; y2: number; stroke: string; strokeWidth: number }>,
+            { x1: 40, y1: 10, x2: 40, y2: 180, stroke: MUTED, strokeWidth: 1 }
+          ),
+          React.createElement(Line as unknown as React.ComponentType<{ x1: number; y1: number; x2: number; y2: number; stroke: string; strokeWidth: number }>,
+            { x1: 40, y1: 180, x2: 490, y2: 180, stroke: MUTED, strokeWidth: 1 }
+          ),
+
+          // Axis labels
+          React.createElement(Text as unknown as React.ComponentType<{ x: number; y: number; fontSize: number; fill: string; textAnchor?: string }>,
+            { x: 22, y: 100, fontSize: 8, fill: MUTED, textAnchor: 'middle' },
+            'VISIBILITY'
+          ),
+          React.createElement(Text as unknown as React.ComponentType<{ x: number; y: number; fontSize: number; fill: string; textAnchor?: string }>,
+            { x: 265, y: 197, fontSize: 8, fill: MUTED, textAnchor: 'middle' },
+            'TIME'
+          ),
+
+          // Hype cycle curve (cubic bezier)
+          React.createElement(Path as unknown as React.ComponentType<{ d: string; fill: string; stroke: string; strokeWidth: number }>,
+            {
+              d: 'M 55 160 C 80 155 110 20 160 18 C 200 16 230 140 280 165 C 320 183 355 75 390 72 C 425 69 455 88 480 90',
+              fill: 'none',
+              stroke: '#c0392b',
+              strokeWidth: 2.5,
+            }
+          ),
+
+          // Stage label lines (vertical dashes at key x positions)
+          ...[55, 160, 280, 390, 480].map((x, i) =>
+            React.createElement(Line as unknown as React.ComponentType<{ x1: number; y1: number; x2: number; y2: number; stroke: string; strokeWidth: number; strokeDasharray?: string }>,
+              { key: `vl-${i}`, x1: x, y1: 178, x2: x, y2: 185, stroke: MUTED, strokeWidth: 1 }
+            )
+          ),
+
+          // Stage labels below axis
+          ...[
+            { x: 55,  label: 'Technology\nTrigger' },
+            { x: 160, label: 'Peak of\nExpectations' },
+            { x: 280, label: 'Trough of\nDisillusionment' },
+            { x: 390, label: 'Slope of\nEnlightenment' },
+            { x: 480, label: 'Plateau of\nProductivity' },
+          ].map(({ x, label }, i) =>
+            React.createElement(Text as unknown as React.ComponentType<{ key?: string; x: number; y: number; fontSize: number; fill: string; textAnchor?: string }>,
+              { key: `sl-${i}`, x, y: 193, fontSize: 6, fill: i === 2 ? GREEN : MUTED, textAnchor: 'middle' },
+              label
+            )
+          ),
+
+          // "WE ARE HERE" marker at Trough (x=280, y=165)
+          React.createElement(Circle as unknown as React.ComponentType<{ cx: number; cy: number; r: number; fill: string; stroke: string; strokeWidth: number }>,
+            { cx: 280, cy: 165, r: 5, fill: GREEN, stroke: WHITE, strokeWidth: 1.5 }
+          ),
+          React.createElement(Line as unknown as React.ComponentType<{ x1: number; y1: number; x2: number; y2: number; stroke: string; strokeWidth: number; strokeDasharray?: string }>,
+            { x1: 280, y1: 159, x2: 280, y2: 135, stroke: GREEN, strokeWidth: 1, strokeDasharray: '3 2' }
+          ),
+          React.createElement(Text as unknown as React.ComponentType<{ x: number; y: number; fontSize: number; fill: string; fontWeight?: string; textAnchor?: string }>,
+            { x: 280, y: 130, fontSize: 7, fill: GREEN, fontWeight: 'bold', textAnchor: 'middle' },
+            '▼ WE ARE HERE'
+          ),
+        )
+      ),
+
+      // Stage pills (summary row)
       React.createElement(View, { style: styles.hypePillRow },
         ...[
           { label: 'Technology Trigger', active: false },
