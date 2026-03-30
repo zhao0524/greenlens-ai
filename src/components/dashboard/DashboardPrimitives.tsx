@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react'
+import { AnimatedBar } from '@/components/dashboard/AnimatedBar'
 import {
   CheckCircle2,
   TrendingDown,
   TrendingUp,
 } from 'lucide-react'
 
-function cx(...classes: Array<string | false | null | undefined>) {
+export function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
 }
 
@@ -62,7 +63,7 @@ export function DashboardPage({
   children: ReactNode
   className?: string
 }) {
-  return <div className={cx('px-4 py-5 lg:px-6 lg:py-6', className)}>{children}</div>
+  return <div className={cx('px-6 py-6 lg:px-8 lg:py-7', className)}>{children}</div>
 }
 
 export function DashboardHeader({
@@ -78,9 +79,12 @@ export function DashboardHeader({
 }) {
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-[#12241d]">{title}</h1>
-        <p className="mt-1 text-sm text-[#8b9a93]">{subtitle}</p>
+      <div className="flex items-start gap-3">
+        <span className="mt-1.5 h-6 w-[3px] shrink-0 rounded-full bg-[#38b76a]" />
+        <div>
+          <h1 className="text-[1.6rem] font-bold tracking-tight text-[#12241d]">{title}</h1>
+          <p className="mt-1 text-sm font-medium text-[#546760]">{subtitle}</p>
+        </div>
       </div>
       <div className="flex flex-wrap items-center gap-3">
         {badge}
@@ -114,9 +118,10 @@ export function DashboardFilterPill({
   value: string
 }) {
   return (
-    <div className="flex-1 basis-40 rounded-2xl border border-[#eef1ee] bg-white px-4 py-3 shadow-[0_4px_14px_rgba(16,38,29,0.04)]">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-[#99a69f]">{label}</p>
-      <div className="mt-1">
+    <div className="flex-1 basis-40 rounded-xl border border-[#eef2ef] border-l-2 border-l-[#3ac56d]/40 bg-white px-4 py-2.5">
+      <p className="text-[11px] uppercase tracking-[0.18em] text-[#5a6e66]">{label}</p>
+      <div className="mt-1 flex items-center gap-1.5">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#38b76a]/60" />
         <span className="truncate text-sm font-medium text-[#1b2b23]">{value}</span>
       </div>
     </div>
@@ -160,41 +165,43 @@ export function DashboardStatCard({
   statusLabel?: string
   statusTone?: 'good' | 'warning' | 'neutral'
 }) {
-  const statusClass = statusTone === 'warning'
-    ? 'text-[#ffd7a3]'
-    : statusTone === 'neutral'
-      ? 'text-white/75'
-      : 'text-[#bff0c9]'
+  const deltaIsGood = delta !== null && delta !== undefined
+    ? (statusTone === 'warning' ? delta < 0 : delta > 0)
+    : null
 
   return (
-    <div className="rounded-[18px] bg-[linear-gradient(135deg,#2d5d4c_0%,#356d59_100%)] p-5 text-white shadow-[0_14px_30px_rgba(37,80,65,0.18)]">
+    <div className="relative overflow-hidden rounded-[18px] border border-[#eef2ef] bg-white p-5 shadow-[0_4px_16px_rgba(16,38,29,0.06)] transition-shadow duration-200 hover:shadow-[0_8px_24px_rgba(16,38,29,0.10)]">
+      <div className="absolute left-0 top-0 h-[3px] w-12 rounded-br-full bg-[#38b76a] opacity-70" />
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">{label}</p>
-          <p className="mt-4 text-3xl font-semibold tracking-tight">{value}</p>
-          <p className="mt-1 text-sm text-white/75">{unit}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#5c6e67]">{label}</p>
+          <p className="mt-3 text-[2rem] font-bold tracking-tight text-[#152820]">{value}</p>
+          <p className="mt-0.5 text-xs text-[#5c6e67]">{unit}</p>
         </div>
-        <div className="rounded-xl bg-white/12 p-2.5 text-white/85">{icon}</div>
+        <div className="rounded-2xl bg-[#f0faf4] p-3 text-[#38b76a] ring-1 ring-[#38b76a]/10">{icon}</div>
       </div>
-      <div className="mt-6 flex items-center justify-between gap-3 text-xs">
-        <span className="text-white/70">{helper}</span>
-        <span className={cx('flex items-center gap-1 font-semibold', statusClass)}>
-          {delta !== null && delta !== undefined ? (
-            <>
-              {delta > 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-              {delta > 0 ? '+' : ''}
-              {formatNumber(delta, Math.abs(delta) < 10 ? 1 : 0)}
-              {deltaSuffix}
-            </>
-          ) : statusLabel ? (
-            statusLabel
-          ) : (
-            <>
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Live
-            </>
-          )}
-        </span>
+      <div className="mt-5 flex items-center justify-between gap-3">
+        <span className="text-xs text-[#5c6e67]">{helper}</span>
+        {delta !== null && delta !== undefined ? (
+          <span className={cx(
+            'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold tabular-nums',
+            deltaIsGood ? 'bg-[#eaf7ee] text-[#1e7d45]' : 'bg-red-50 text-red-600'
+          )}>
+            {delta > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+            {delta > 0 ? '+' : ''}
+            {formatNumber(delta, Math.abs(delta) < 10 ? 1 : 0)}
+            {deltaSuffix}
+          </span>
+        ) : statusLabel ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#eaf7ee] px-2.5 py-1 text-[11px] font-semibold text-[#1e7d45]">
+            {statusLabel}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#eaf7ee] px-2.5 py-1 text-[11px] font-semibold text-[#1e7d45]">
+            <CheckCircle2 className="h-3 w-3" />
+            Live
+          </span>
+        )}
       </div>
     </div>
   )
@@ -217,14 +224,14 @@ export function DashboardPanel({
 }) {
   return (
     <section className={cx('rounded-[20px] border border-[#eff2ef] bg-white p-5 shadow-[0_8px_26px_rgba(16,38,29,0.05)]', fillHeight && 'flex flex-col', className)}>
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 border-b border-[#f0f3f0] pb-4">
         <div>
           <h2 className="text-base font-semibold text-[#152820]">{title}</h2>
-          {subtitle && <p className="mt-1 text-xs leading-5 text-[#96a49d]">{subtitle}</p>}
+          {subtitle && <p className="mt-1 text-xs leading-5 text-[#5a6d65]">{subtitle}</p>}
         </div>
         {badge}
       </div>
-      <div className={cx('mt-4', fillHeight && 'flex-1 flex flex-col')}>{children}</div>
+      <div className={cx('mt-5', fillHeight && 'flex-1 flex flex-col')}>{children}</div>
     </section>
   )
 }
@@ -246,11 +253,17 @@ export function DashboardMiniStat({
       ? 'text-amber-700'
       : 'text-[#152820]'
 
+  const borderClass = tone === 'good'
+    ? 'border-l-2 border-emerald-400'
+    : tone === 'warning'
+      ? 'border-l-2 border-amber-400'
+      : 'border-l-2 border-[#dce9e2]'
+
   return (
-    <div className="rounded-2xl bg-[#fbfcfb] px-4 py-3">
-      <p className="text-[11px] uppercase tracking-[0.15em] text-[#9aa7a0]">{label}</p>
-      <p className={cx('mt-2 text-2xl font-semibold', colorClass)}>{value}</p>
-      {hint && <p className="mt-1 text-xs leading-5 text-[#7f8f88]">{hint}</p>}
+    <div className={cx('rounded-2xl border border-[#eef2ef] bg-[#fafcfb] pl-3 pr-4 py-3', borderClass)}>
+      <p className="text-[11px] uppercase tracking-[0.18em] text-[#5a6e66]">{label}</p>
+      <p className={cx('mt-2 text-[1.55rem] font-semibold', colorClass)}>{value}</p>
+      {hint && <p className="mt-1 text-xs font-medium leading-5 text-[#4a5e56]">{hint}</p>}
     </div>
   )
 }
@@ -269,7 +282,7 @@ export function DashboardBadge({
       : tone === 'red'
         ? 'bg-red-50 text-red-700 border-red-200'
         : tone === 'slate'
-          ? 'bg-[#f7fbf8] text-[#60726b] border-[#dce9e2]'
+          ? 'bg-slate-50 text-slate-600 border-slate-200'
           : 'bg-emerald-50 text-emerald-800 border-emerald-200'
 
   return (
@@ -298,20 +311,26 @@ export function DashboardBarRow({
       ? 'bg-[#8fa098]'
       : 'bg-[#38b76a]'
 
+  const dotClass = tone === 'amber'
+    ? 'bg-[#e3a063]'
+    : tone === 'slate'
+      ? 'bg-[#8fa098]'
+      : 'bg-[#38b76a]'
+
   return (
-    <div className="rounded-2xl bg-[#fbfcfb] px-4 py-3">
+    <div className="rounded-2xl bg-[#fbfcfb] px-4 py-3 transition-colors duration-150 hover:bg-[#f5f8f5]">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-[#1a2c24]">{label}</p>
-          {hint && <p className="mt-1 text-xs text-[#7f8f88]">{hint}</p>}
+          <div className="flex items-center gap-2">
+            <span className={cx('mt-0.5 h-2 w-2 shrink-0 rounded-full', dotClass)} />
+            <p className="text-sm font-medium text-[#1a2c24]">{label}</p>
+          </div>
+          {hint && <p className="mt-1 text-xs text-[#4a5e56]">{hint}</p>}
         </div>
         <p className="text-sm font-semibold text-[#152820]">{value}</p>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#e4ece7]">
-        <div
-          className={cx('h-full rounded-full', barClass)}
-          style={{ width: `${Math.max(4, Math.min(100, percentage))}%` }}
-        />
+      <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[#e4ece7]">
+        <AnimatedBar percentage={percentage} className={cx('h-full rounded-full', barClass)} />
       </div>
     </div>
   )
@@ -327,10 +346,10 @@ export function DashboardTable({
   return (
     <div className="overflow-hidden rounded-[18px] border border-[#edf1ee]">
       <table className="w-full text-sm">
-        <thead className="bg-[#fbfcfb]">
+        <thead className="bg-[#f4f7f5]">
           <tr className="border-b border-[#edf1ee]">
             {headers.map((header) => (
-              <th key={header} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[#93a19b]">
+              <th key={header} className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[#5a6d65]">
                 {header}
               </th>
             ))}
@@ -338,7 +357,7 @@ export function DashboardTable({
         </thead>
         <tbody>
           {rows.map((row, index) => (
-            <tr key={index} className="border-b border-[#edf1ee] last:border-0">
+            <tr key={index} className="border-b border-[#edf1ee] last:border-0 transition-colors duration-100 hover:bg-[#f9fbf9]">
               {row.map((cell, cellIndex) => (
                 <td key={cellIndex} className="px-4 py-3 text-[#1a2c24]">
                   {cell}
@@ -362,7 +381,7 @@ export function DashboardEmptyState({
   return (
     <div className="rounded-[20px] border border-dashed border-[#dce9e2] bg-[#fbfcfb] p-8 text-center">
       <p className="font-medium text-[#152820]">{title}</p>
-      <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#7f8f88]">{message}</p>
+      <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#4a5e56]">{message}</p>
     </div>
   )
 }

@@ -308,7 +308,7 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           <p className="font-medium text-[#152820]">{provider.provider}</p>
-                          <p className="mt-1 text-sm leading-6 text-[#60726b]">{provider.recommendation}</p>
+                          <p className="mt-1 text-sm leading-6 text-[#2e4a40]">{provider.recommendation}</p>
                         </div>
                         <DashboardBadge tone={provider.utilizationRate < 75 ? 'amber' : 'green'}>
                           {formatPercent(provider.utilizationRate, 0)}
@@ -349,13 +349,13 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
                         <div className="flex items-start justify-between gap-4">
                           <div>
                             <p className="font-medium text-[#152820]">{alert.provider}</p>
-                            <p className="mt-1 text-sm leading-6 text-[#60726b]">{alert.actionRequired}</p>
+                            <p className="mt-1 text-sm leading-6 text-[#2e4a40]">{alert.actionRequired}</p>
                           </div>
                           <DashboardBadge tone={alert.monthsToRenewal <= 3 ? 'amber' : 'slate'}>
                             {alert.monthsToRenewal} months
                           </DashboardBadge>
                         </div>
-                        <p className="mt-3 text-xs text-[#7f8f88]">Renewal date: {alert.renewalDate}</p>
+                        <p className="mt-3 text-xs font-medium text-[#4a5e56]">Renewal date: {alert.renewalDate}</p>
                       </div>
                     ))}
                   </div>
@@ -405,8 +405,8 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
                   rows={filteredProviders.map((provider) => [
                     <span key={`${provider.provider}-name`} className="font-medium text-[#152820]">{provider.provider}</span>,
                     <span key={`${provider.provider}-util`} className="font-medium text-[#152820]">{formatPercent(provider.utilizationRate, 0)}</span>,
-                    <span key={`${provider.provider}-seats`} className="text-[#60726b]">{provider.activeSeats}/{provider.totalSeats} active · {provider.dormantSeats} dormant</span>,
-                    <span key={`${provider.provider}-cost`} className="text-[#60726b]">{formatCurrency(provider.estimatedAnnualCost)}</span>,
+                    <span key={`${provider.provider}-seats`} className="text-[#2e4a40]">{provider.activeSeats}/{provider.totalSeats} active · {provider.dormantSeats} dormant</span>,
+                    <span key={`${provider.provider}-cost`} className="text-[#2e4a40]">{formatCurrency(provider.estimatedAnnualCost)}</span>,
                     <span key={`${provider.provider}-savings`} className="text-emerald-700">{formatCurrency(provider.potentialSavingsAtRenewal)}</span>,
                   ])}
                 />

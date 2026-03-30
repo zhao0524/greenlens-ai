@@ -307,15 +307,15 @@ export default async function FootprintPage({ searchParams }: FootprintPageProps
               >
                 <div className="space-y-3">
                   <div className="rounded-2xl bg-[#fbfcfb] px-4 py-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#9aa7a0]">Carbon methodology</p>
-                    <p className="mt-2 text-sm leading-6 text-[#60726b]">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#4a6459]">Carbon methodology</p>
+                    <p className="mt-2 text-sm leading-6 text-[#2e4a40]">
                       {footprint?.carbon_methodology ??
                         'Carbon is modeled from provider usage data, model-specific energy intensity assumptions, regional grid factors, and a hyperscale data-center PUE baseline.'}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-[#fbfcfb] px-4 py-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#9aa7a0]">Water methodology</p>
-                    <p className="mt-2 text-sm leading-6 text-[#60726b]">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#4a6459]">Water methodology</p>
+                    <p className="mt-2 text-sm leading-6 text-[#2e4a40]">
                       {footprint?.water_methodology ??
                         'Water usage is estimated from energy demand using representative WUE assumptions and translated into direct cooling-water equivalents.'}
                     </p>
@@ -338,7 +338,7 @@ export default async function FootprintPage({ searchParams }: FootprintPageProps
                       <span key={`${model.model}-name`} className="font-medium text-[#152820]">{model.model}</span>,
                       <span key={`${model.model}-carbon`}>{model.carbonKg.toFixed(3)} kg</span>,
                       <span key={`${model.model}-share`} className="font-medium text-[#152820]">{formatPercent(model.percentage, 0)}</span>,
-                      <span key={`${model.model}-note`} className="text-[#60726b]">
+                      <span key={`${model.model}-note`} className="text-[#2e4a40]">
                         {model.percentage > 50
                           ? 'Primary emissions driver this period.'
                           : model.percentage > 20

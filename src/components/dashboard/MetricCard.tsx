@@ -9,9 +9,9 @@ interface MetricCardProps {
 export default function MetricCard({ label, value, unit, delta, status }: MetricCardProps) {
   return (
     <div className="rounded-[20px] border border-[#eff2ef] bg-white p-5 shadow-[0_8px_26px_rgba(16,38,29,0.05)]">
-      <p className="mb-1 text-sm text-[#7f8f88]">{label}</p>
+      <p className="mb-1 text-sm text-[#4a5e56]">{label}</p>
       <p className="text-2xl font-bold text-[#152820]">{value}</p>
-      {unit && <p className="mt-0.5 text-sm text-[#9aa7a0]">{unit}</p>}
+      {unit && <p className="mt-0.5 text-sm text-[#5a6e66]">{unit}</p>}
       <div className="flex items-center gap-2 mt-2">
         {delta !== null && delta !== undefined && (
           <span className={`text-sm font-medium ${delta < 0 ? 'text-emerald-700' : 'text-amber-700'}`}>

@@ -1,8 +1,10 @@
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import AnalysisTriggerScreen from '@/components/dashboard/AnalysisTriggerScreen'
 import {
   DashboardBadge,
   DashboardFilterBar,
+  DashboardFilterPill,
   DashboardHeader,
   DashboardMetaPill,
   DashboardMiniStat,
@@ -13,14 +15,17 @@ import {
   formatCompactNumber,
   formatNumber,
 } from '@/components/dashboard/DashboardPrimitives'
+import { DashboardFilterSelect } from '@/components/dashboard/DashboardFilterSelect'
 import DownloadPDFButton from '@/components/dashboard/ESGExport'
 import RerunAnalysisButton from '@/components/dashboard/RerunAnalysisButton'
 import SectionAvailabilityNotice from '@/components/dashboard/SectionAvailabilityNotice'
 import { getCompanyAnalysisState } from '@/lib/analysis/get-company-analysis-state'
 import { getPreferredReport } from '@/lib/reports/get-preferred-report'
+import { getCompanyReports } from '@/lib/reports/get-company-reports'
 import { getSectionAvailability } from '@/lib/reports/report-availability'
 import {
   Bot,
+  Database,
   Droplets,
   FileText,
   Leaf,
@@ -36,7 +41,10 @@ export default async function ESGPage({ searchParams }: ESGPageProps) {
   const { data: { user } } = await supabase.auth.getUser()
   const { data: company } = await supabase.from('companies').select('*')
     .eq('supabase_user_id', user!.id).single()
-  const report = await getPreferredReport(supabase, company!.id, requestedReportId)
+  const [report, availableReports] = await Promise.all([
+    getPreferredReport(supabase, company!.id, requestedReportId),
+    getCompanyReports(supabase, company!.id),
+  ])
   const { analysisJob } = await getCompanyAnalysisState(supabase, company!.id)
 
   if (!report) return <AnalysisTriggerScreen companyId={company!.id} initialJobState={analysisJob} />
@@ -85,15 +93,21 @@ export default async function ESGPage({ searchParams }: ESGPageProps) {
           )}
         />
 
-        <DashboardFilterBar
-          items={[
-            { label: 'Page', value: 'ESG Export' },
-            { label: 'Disclosure State', value: esgAvailable ? 'Disclosure Ready' : 'Partial Report' },
-            { label: 'Frameworks', value: `${frameworks.length} mapped` },
-            { label: 'Time Period', value: esg?.reporting_period ?? report.reporting_period },
-          ]}
-          actionLabel="Refresh Disclosure"
-        />
+        <Suspense>
+          <DashboardFilterBar>
+            <DashboardFilterSelect
+              label="Period"
+              paramKey="reportId"
+              value={requestedReportId ?? 'all'}
+              options={[
+                { label: `${report.reporting_period} (latest)`, value: 'all' },
+                ...availableReports.filter((r) => r.id !== report.id).map((r) => ({ label: r.reporting_period, value: r.id })),
+              ]}
+            />
+            <DashboardFilterPill label="Disclosure State" value={esgAvailable ? 'Disclosure Ready' : 'Partial Report'} />
+            <DashboardFilterPill label="Frameworks" value={`${frameworks.length} mapped`} />
+          </DashboardFilterBar>
+        </Suspense>
 
         {!esgAvailable && (
           <SectionAvailabilityNotice
@@ -102,6 +116,7 @@ export default async function ESGPage({ searchParams }: ESGPageProps) {
           />
         )}
 
+        <div className="fade-in-up stagger-2">
         <DashboardStatGrid>
           <DashboardStatCard
             label="AI Carbon"
@@ -143,15 +158,30 @@ export default async function ESGPage({ searchParams }: ESGPageProps) {
             statusTone={esgAvailable ? 'good' : 'warning'}
           />
         </DashboardStatGrid>
+        </div>
 
+        <div className="fade-in-up stagger-3">
         <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
           <DashboardPanel
             title="Disclosure statement"
             subtitle="The generated narrative intended to support ESG or sustainability reporting workflows."
             badge={<DashboardBadge tone={esgAvailable ? 'green' : 'amber'}>{esgAvailable ? 'Disclosure ready' : 'Partial disclosure'}</DashboardBadge>}
           >
-            <div className="rounded-2xl bg-[#fbfcfb] px-5 py-5 text-sm leading-7 text-[#60726b] whitespace-pre-line">
-              {esg?.esg_text ?? 'ESG disclosure text will appear here after analysis is complete.'}
+            <div className="rounded-2xl border border-[#e6efe9] bg-[#f8fcf9]">
+              <div className="flex items-center justify-between border-b border-[#e6efe9] px-5 py-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-3.5 w-3.5 text-[#38b76a]" />
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#3d6454]">
+                    ESG Disclosure — {esg?.reporting_period ?? report.reporting_period}
+                  </span>
+                </div>
+                <span className="rounded-full bg-[#eaf7ee] px-2.5 py-0.5 text-[10px] font-semibold text-[#1e7d45]">
+                  {esgAvailable ? 'Disclosure ready' : 'Draft'}
+                </span>
+              </div>
+              <div className="px-5 py-5 text-sm leading-7 text-[#2e4a40] whitespace-pre-line">
+                {esg?.esg_text ?? 'ESG disclosure text will appear here after analysis is complete.'}
+              </div>
             </div>
           </DashboardPanel>
 
@@ -185,7 +215,9 @@ export default async function ESGPage({ searchParams }: ESGPageProps) {
             </div>
           </DashboardPanel>
         </div>
+        </div>
 
+        <div className="fade-in-up stagger-4">
         <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
           <DashboardPanel
             title="Methodology and provenance"
@@ -194,22 +226,37 @@ export default async function ESGPage({ searchParams }: ESGPageProps) {
           >
             <div className="space-y-3">
               <div className="rounded-2xl bg-[#fbfcfb] px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#9aa7a0]">Model usage data</p>
-                <p className="mt-2 text-sm leading-6 text-[#60726b]">
+                <div className="mb-2 flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#e8f5ee] text-[#38b76a]">
+                    <Database className="h-3.5 w-3.5" />
+                  </span>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#4a6459]">Model usage data</p>
+                </div>
+                <p className="text-sm leading-6 text-[#2e4a40]">
                   Usage data is collected via provider admin APIs and returns organizational usage metrics such as model identifiers,
                   request counts, and token volumes. Prompt content, completion content, and individual user message content are not accessed.
                 </p>
               </div>
               <div className="rounded-2xl bg-[#fbfcfb] px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#9aa7a0]">Carbon methodology</p>
-                <p className="mt-2 text-sm leading-6 text-[#60726b]">
+                <div className="mb-2 flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#e8f5ee] text-[#38b76a]">
+                    <Leaf className="h-3.5 w-3.5" />
+                  </span>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#4a6459]">Carbon methodology</p>
+                </div>
+                <p className="text-sm leading-6 text-[#2e4a40]">
                   {esg?.carbon_methodology ??
                     'Carbon is estimated from model-specific energy intensity, hyperscale PUE assumptions, and regional grid carbon factors.'}
                 </p>
               </div>
               <div className="rounded-2xl bg-[#fbfcfb] px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#9aa7a0]">Water methodology</p>
-                <p className="mt-2 text-sm leading-6 text-[#60726b]">
+                <div className="mb-2 flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#deeef9] text-[#2f7fc4]">
+                    <Droplets className="h-3.5 w-3.5" />
+                  </span>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#4a6459]">Water methodology</p>
+                </div>
+                <p className="text-sm leading-6 text-[#2e4a40]">
                   {esg?.water_methodology ??
                     'Water is estimated from the modeled energy footprint using representative WUE assumptions and direct cooling-water equivalents.'}
                 </p>
@@ -226,10 +273,13 @@ export default async function ESGPage({ searchParams }: ESGPageProps) {
               {frameworks.map((framework) => (
                 <div key={framework} className="rounded-2xl bg-[#fbfcfb] px-4 py-4">
                   <div className="flex items-center justify-between gap-4">
-                    <p className="font-medium text-[#152820]">{framework}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-[#38b76a]" />
+                      <p className="font-medium text-[#152820]">{framework}</p>
+                    </div>
                     <DashboardBadge tone="green">Mapped</DashboardBadge>
                   </div>
-                  <p className="mt-2 text-sm leading-6 text-[#60726b]">
+                  <p className="mt-2 text-sm leading-6 text-[#2e4a40]">
                     {frameworkDescriptions[framework] ?? 'Supports narrative and metric alignment for climate-related disclosure workflows.'}
                   </p>
                 </div>
@@ -237,7 +287,9 @@ export default async function ESGPage({ searchParams }: ESGPageProps) {
             </div>
           </DashboardPanel>
         </div>
+        </div>
 
+        <div className="fade-in-up stagger-5">
         <DashboardPanel
           title="Prior-period comparison"
           subtitle="How the current disclosure metrics compare with the previous report where historical values are available."
@@ -264,6 +316,7 @@ export default async function ESGPage({ searchParams }: ESGPageProps) {
             />
           </div>
         </DashboardPanel>
+        </div>
       </div>
     </DashboardPage>
   )

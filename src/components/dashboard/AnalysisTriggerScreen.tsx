@@ -42,7 +42,7 @@ export default function AnalysisTriggerScreen({
         </div>
 
         <h1 className="mb-3 text-3xl font-semibold tracking-tight text-[#12241d]">Ready to analyze your AI footprint</h1>
-        <p className="mx-auto mb-8 max-w-xl text-sm leading-7 text-[#7f8f88]">
+        <p className="mx-auto mb-8 max-w-xl text-sm leading-7 text-[#4a5e56]">
           GreenLens will fetch usage data from your connected integrations, calculate your carbon and
           water impact, and generate strategic recommendations. This takes about 60–90 seconds.
         </p>
@@ -54,7 +54,7 @@ export default function AnalysisTriggerScreen({
               <div className="text-left">
                 <p className="text-sm font-medium text-[#152820]">Analysis running. This takes about a minute.</p>
                 {statusMessage && (
-                  <p className="mt-1 text-xs text-[#7f8f88]">{statusMessage}</p>
+                  <p className="mt-1 text-xs text-[#4a5e56]">{statusMessage}</p>
                 )}
               </div>
             </div>
@@ -81,7 +81,7 @@ export default function AnalysisTriggerScreen({
           {loading ? 'Running analysis…' : jobState?.status === 'failed' ? 'Retry analysis' : 'Run analysis now'}
         </button>
 
-        <p className="mt-4 text-xs text-[#9aa7a0]">
+        <p className="mt-4 text-xs font-medium text-[#5a6e66]">
           Data is sourced from admin APIs only. No individual user content is accessed.
         </p>
       </div>

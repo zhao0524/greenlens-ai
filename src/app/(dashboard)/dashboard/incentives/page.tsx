@@ -250,12 +250,12 @@ export default async function IncentivesPage({ searchParams }: IncentivesPagePro
                       </div>
                       <div className="mt-3 space-y-2">
                         {lane.items.slice(0, 3).map((item) => (
-                          <div key={`${lane.lane}-${item.title}`} className="rounded-xl bg-white px-3 py-2 text-xs leading-5 text-[#60726b]">
+                          <div key={`${lane.lane}-${item.title}`} className="rounded-xl bg-white px-3 py-2 text-sm leading-5 text-[#2e4a40]">
                             {item.title}
                           </div>
                         ))}
                         {lane.items.length === 0 && (
-                          <p className="text-xs text-[#9aa7a0]">No items in this lane.</p>
+                          <p className="text-xs font-medium text-[#4a5e56]">No items in this lane.</p>
                         )}
                       </div>
                     </div>
@@ -270,7 +270,7 @@ export default async function IncentivesPage({ searchParams }: IncentivesPagePro
                 subtitle="The system note plus action-required items that should be assigned to owners."
                 badge={<DashboardBadge tone="slate">Library guidance</DashboardBadge>}
               >
-                <div className="rounded-2xl bg-[#fbfcfb] px-4 py-4 text-sm leading-6 text-[#60726b]">
+                <div className="rounded-2xl bg-[#fbfcfb] px-4 py-4 text-sm leading-6 text-[#2e4a40]">
                   {note}
                 </div>
                 <div className="mt-4 space-y-3">
@@ -305,8 +305,8 @@ export default async function IncentivesPage({ searchParams }: IncentivesPagePro
                     <DashboardBadge key={`${item.title}-category`} tone={item.category === 'Regulatory' ? 'amber' : item.category === 'Financial' ? 'green' : 'blue'}>
                       {item.category}
                     </DashboardBadge>,
-                    <span key={`${item.title}-region`} className="text-[#60726b]">{item.region}</span>,
-                    <span key={`${item.title}-value`} className="text-[#60726b]">{item.estimatedValue}</span>,
+                    <span key={`${item.title}-region`} className="text-[#2e4a40]">{item.region}</span>,
+                    <span key={`${item.title}-value`} className="text-[#2e4a40]">{item.estimatedValue}</span>,
                     <DashboardBadge key={`${item.title}-urgency`} tone={item.urgency === 'High' ? 'amber' : item.urgency === 'Medium' ? 'blue' : 'slate'}>
                       {item.urgency}
                     </DashboardBadge>,

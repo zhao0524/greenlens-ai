@@ -366,17 +366,17 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
                         <div className="flex items-start justify-between gap-4">
                           <div>
                             <DashboardBadge tone={cluster.tone}>{cluster.label}</DashboardBadge>
-                            <p className="mt-3 text-sm leading-6 text-[#60726b]">{cluster.description}</p>
+                            <p className="mt-3 text-sm leading-6 text-[#2e4a40]">{cluster.description}</p>
                           </div>
                           <div className="shrink-0 text-right">
                             <p className="text-xl font-semibold text-[#152820]">{cluster.count}</p>
-                            <p className="text-xs text-[#9aa7a0]">{formatPercent(cluster.share, 0)} of classified models</p>
+                            <p className="text-xs font-medium text-[#5a6e66]">{formatPercent(cluster.share, 0)} of classified models</p>
                           </div>
                         </div>
                         <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#e4ece7]">
                           <div className="h-full rounded-full bg-[#38b76a]" style={{ width: `${Math.max(8, cluster.share)}%` }} />
                         </div>
-                        <p className="mt-2 text-xs text-[#7f8f88]">
+                        <p className="mt-2 text-xs font-medium text-[#4a5e56]">
                           Recommended model class: {titleize(cluster.recommendedClass)}
                         </p>
                       </div>
@@ -431,12 +431,12 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
                           <div className="flex items-start justify-between gap-4">
                             <div>
                               <p className="font-medium text-[#152820]">{candidate.model}</p>
-                              <p className="mt-1 text-sm text-[#60726b]">
+                              <p className="mt-1 text-sm text-[#2e4a40]">
                                 {titleize(candidate.taskCategory)} tasks may be served by {candidate.suggestedAlternative}.
                               </p>
                             </div>
                             {backingModel && (
-                              <div className="shrink-0 text-right text-xs text-[#7f8f88]">
+                              <div className="shrink-0 text-right text-xs font-medium text-[#4a5e56]">
                                 <p>{formatCompactNumber(backingModel.totalRequests, 1)} requests</p>
                                 <p>{formatCompactNumber(((backingModel.totalInputTokens ?? 0) + (backingModel.totalOutputTokens ?? 0)), 1)} tokens</p>
                               </div>
@@ -473,13 +473,13 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
                       return [
                         <div key={`${item.model}-name`}>
                           <p className="font-medium text-[#152820]">{item.model}</p>
-                          <p className="text-xs text-[#9aa7a0]">
+                          <p className="text-xs font-medium text-[#5a6e66]">
                             {formatCompactNumber((item.totalInputTokens ?? 0) + (item.totalOutputTokens ?? 0), 1)} total tokens
                           </p>
                         </div>,
-                        <span key={`${item.model}-provider`} className="text-[#60726b]">{item.provider}</span>,
+                        <span key={`${item.model}-provider`} className="text-[#2e4a40]">{item.provider}</span>,
                         <span key={`${item.model}-requests`} className="font-medium text-[#152820]">{formatCompactNumber(item.totalRequests, 1)}</span>,
-                        <span key={`${item.model}-avg`} className="text-[#60726b]">{formatCompactNumber(averageTokens, 1)}</span>,
+                        <span key={`${item.model}-avg`} className="text-[#2e4a40]">{formatCompactNumber(averageTokens, 1)}</span>,
                         <DashboardBadge key={`${item.model}-cluster`} tone={(clusterLabels[item.behaviorCluster]?.tone ?? 'slate')}>
                           {clusterLabels[item.behaviorCluster]?.label ?? titleize(item.behaviorCluster)}
                         </DashboardBadge>,

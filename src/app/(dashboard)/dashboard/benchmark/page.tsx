@@ -203,14 +203,14 @@ export default async function BenchmarkPage({ searchParams }: BenchmarkPageProps
 
                 <div className="mt-4 rounded-2xl bg-[#fbfcfb] px-4 py-4">
                   <div className="flex items-center justify-between gap-4 text-sm">
-                    <span className="text-[#7f8f88]">Lower benchmark emissions</span>
+                    <span className="text-[#4a5e56]">Lower benchmark emissions</span>
                     <span className="font-medium text-[#152820]">{carbonPercentile != null ? formatPercent(carbonPercentile, 0) : '—'}</span>
-                    <span className="text-[#7f8f88]">Higher benchmark emissions</span>
+                    <span className="text-[#4a5e56]">Higher benchmark emissions</span>
                   </div>
                   <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#e4ece7]">
                     <div className="h-full rounded-full bg-[#38b76a]" style={{ width: `${Math.min(100, carbonPercentile ?? 0)}%` }} />
                   </div>
-                  <p className="mt-3 text-xs text-[#7f8f88]">{stat?.carbon_percentile?.method}</p>
+                  <p className="mt-3 text-xs text-[#4a5e56]">{stat?.carbon_percentile?.method}</p>
                 </div>
               </DashboardPanel>
 
@@ -315,7 +315,7 @@ export default async function BenchmarkPage({ searchParams }: BenchmarkPageProps
                       />
                     ))}
                     {taskClustering?.method && (
-                      <p className="rounded-2xl bg-[#fbfcfb] px-4 py-3 text-sm leading-6 text-[#60726b]">
+                      <p className="rounded-2xl bg-[#fbfcfb] px-4 py-3 text-sm leading-6 text-[#2e4a40]">
                         {taskClustering.method}
                       </p>
                     )}
@@ -336,7 +336,7 @@ export default async function BenchmarkPage({ searchParams }: BenchmarkPageProps
               subtitle="Executive framing for how current usage patterns align with broader market maturity."
               badge={<DashboardBadge tone="blue">Narrative context</DashboardBadge>}
             >
-              <p className="text-sm leading-7 text-[#60726b]">{report.executive_summary.hype_cycle_context}</p>
+              <p className="text-sm leading-7 text-[#2e4a40]">{report.executive_summary.hype_cycle_context}</p>
             </DashboardPanel>
           )}
         </>

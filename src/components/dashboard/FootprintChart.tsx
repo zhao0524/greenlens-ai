@@ -21,7 +21,7 @@ const GREEN_SHADES = [
 export default function FootprintChart({ data, selectedModel }: FootprintChartProps) {
   if (!data || data.length === 0) {
     return (
-      <div className="flex h-48 items-center justify-center text-sm text-[#7f8f88]">
+      <div className="flex h-48 items-center justify-center text-sm text-[#4a5e56]">
         No footprint data available
       </div>
     )
@@ -41,7 +41,7 @@ export default function FootprintChart({ data, selectedModel }: FootprintChartPr
         <CartesianGrid stroke="#edf1ee" horizontal={false} />
         <XAxis
           type="number"
-          tick={{ fill: '#9aa7a0', fontSize: 11 }}
+          tick={{ fill: '#5a6e66', fontSize: 11 }}
           tickLine={false}
           axisLine={false}
           tickFormatter={(v) => `${v} kg`}
@@ -49,7 +49,7 @@ export default function FootprintChart({ data, selectedModel }: FootprintChartPr
         <YAxis
           type="category"
           dataKey="model"
-          tick={{ fill: '#60726b', fontSize: 11 }}
+          tick={{ fill: '#2e4a40', fontSize: 11 }}
           tickLine={false}
           axisLine={false}
           width={140}

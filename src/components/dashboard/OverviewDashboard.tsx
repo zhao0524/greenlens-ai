@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { Suspense } from 'react'
 import {
   CartesianGrid,
   Cell,
@@ -21,6 +22,7 @@ import {
 } from 'lucide-react'
 import {
   DashboardFilterBar,
+  DashboardFilterPill,
   DashboardHeader,
   DashboardMetaPill,
   DashboardPage,
@@ -29,10 +31,13 @@ import {
   DashboardStatGrid,
   formatNumber,
 } from '@/components/dashboard/DashboardPrimitives'
+import { DashboardFilterSelect } from '@/components/dashboard/DashboardFilterSelect'
 
 interface OverviewDashboardProps {
   companyName: string
   reportPeriod: string
+  requestedReportId: string | null
+  availableReports: { id: string; reporting_period: string; created_at: string }[]
   latestCompleteDay: string | null
   anomalyDetected: boolean
   benchmarkAvailable: boolean
@@ -122,10 +127,10 @@ export default function OverviewDashboard(props: OverviewDashboardProps) {
 
   return (
     <DashboardPage>
-      <div className="space-y-5">
+      <div className="space-y-6">
         <DashboardHeader
-          title={`Hello, ${props.companyName}!`}
-          subtitle="What are you looking for today?"
+          title={`${props.companyName} — AI Sustainability`}
+          subtitle={`Overview · ${props.reportPeriod}`}
           badge={(
             <DashboardMetaPill>
               {props.latestCompleteDay ? `Data through ${props.latestCompleteDay}` : 'Latest report synced'}
@@ -134,14 +139,22 @@ export default function OverviewDashboard(props: OverviewDashboardProps) {
           actions={props.children}
         />
 
-        <DashboardFilterBar
-          items={[
-            { label: 'Report Type', value: 'Overview Dashboard' },
-            { label: 'Company', value: props.companyName },
-            { label: 'Data Mode', value: props.anomalyDetected ? 'Anomaly Review' : 'Real-Time' },
-            { label: 'Time Period', value: props.reportPeriod },
-          ]}
-        />
+        <Suspense>
+          <DashboardFilterBar>
+            <DashboardFilterSelect
+              label="Period"
+              paramKey="reportId"
+              value={props.requestedReportId ?? 'all'}
+              options={[
+                { label: `${props.reportPeriod} (latest)`, value: 'all' },
+                ...props.availableReports
+                  .filter((r) => r.reporting_period !== props.reportPeriod)
+                  .map((r) => ({ label: r.reporting_period, value: r.id })),
+              ]}
+            />
+            <DashboardFilterPill label="Data Mode" value={props.anomalyDetected ? 'Anomaly Review' : 'Real-Time'} />
+          </DashboardFilterBar>
+        </Suspense>
 
         <DashboardStatGrid>
           <DashboardStatCard
@@ -151,6 +164,7 @@ export default function OverviewDashboard(props: OverviewDashboardProps) {
             delta={props.carbonDelta}
             helper="Monthly AI footprint"
             icon={<Leaf className="h-4 w-4" />}
+            statusTone="warning"
           />
           <DashboardStatCard
             label="Water"
@@ -216,7 +230,7 @@ export default function OverviewDashboard(props: OverviewDashboardProps) {
 
               <div className="text-center lg:text-left">
                 <p className="text-4xl font-semibold tracking-tight text-[#152820]">{totalSignal}</p>
-                <p className="mt-1 text-sm text-[#8f9c95]">Total signal index</p>
+                <p className="mt-1 text-sm text-[#5c6e67]">Total signal index</p>
                 <div className="mt-4 flex flex-wrap justify-center gap-2 lg:justify-start">
                   {distributionData.map((item) => (
                     <span
@@ -237,7 +251,7 @@ export default function OverviewDashboard(props: OverviewDashboardProps) {
                     <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                     <span className="font-medium text-[#1a2c24]">{item.name}</span>
                   </div>
-                  <span className="text-[#60726b]">{item.display}</span>
+                  <span className="text-[#2e4a40]">{item.display}</span>
                 </div>
               ))}
             </div>
@@ -253,18 +267,16 @@ export default function OverviewDashboard(props: OverviewDashboardProps) {
             )}
           >
             <div className="mt-4 grid grid-cols-3 gap-3">
-              <div>
-                <p className="text-2xl font-semibold text-[#152820]">{peakPoint.actual}</p>
-                <p className="text-[11px] uppercase tracking-[0.15em] text-[#9aa7a0]">Peak activity</p>
-              </div>
-              <div>
-                <p className="text-2xl font-semibold text-[#152820]">{targetPeak}</p>
-                <p className="text-[11px] uppercase tracking-[0.15em] text-[#9aa7a0]">Target ceiling</p>
-              </div>
-              <div>
-                <p className="text-2xl font-semibold text-[#152820]">{efficiency}%</p>
-                <p className="text-[11px] uppercase tracking-[0.15em] text-[#9aa7a0]">Peak efficiency</p>
-              </div>
+              {[
+                { value: peakPoint.actual, label: 'Peak activity' },
+                { value: targetPeak, label: 'Target ceiling' },
+                { value: `${efficiency}%`, label: 'Peak efficiency' },
+              ].map(({ value, label }) => (
+                <div key={label} className="rounded-xl border border-[#eef2ef] bg-[#fafcfb] px-3 py-2.5">
+                  <p className="text-xl font-bold text-[#152820]">{value}</p>
+                  <p className="mt-0.5 text-[11px] uppercase tracking-[0.14em] text-[#5a6e66]">{label}</p>
+                </div>
+              ))}
             </div>
 
             <div className="mt-4 h-[240px]">
@@ -290,19 +302,19 @@ export default function OverviewDashboard(props: OverviewDashboardProps) {
 
             <div className="mt-4 space-y-2 border-t border-[#f0f3f0] pt-4 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-[#7f8f88]">Peak window</span>
+                <span className="text-[#4a5e56]">Peak window</span>
                 <span className="font-medium text-[#152820]">{peakPoint.label} ({peakPoint.actual})</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#7f8f88]">Lowest window</span>
+                <span className="text-[#4a5e56]">Lowest window</span>
                 <span className="font-medium text-[#152820]">{lowPoint.label} ({lowPoint.actual})</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#7f8f88]">Demand variance</span>
+                <span className="text-[#4a5e56]">Demand variance</span>
                 <span className="font-medium text-[#152820]">{variance} activity points</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#7f8f88]">Sector position</span>
+                <span className="text-[#4a5e56]">Sector position</span>
                 <span className="font-medium text-[#152820]">
                   {props.carbonPercentile != null ? `${Math.round(props.carbonPercentile)}th percentile` : 'Unavailable'}
                 </span>
@@ -310,7 +322,7 @@ export default function OverviewDashboard(props: OverviewDashboardProps) {
             </div>
 
             {props.benchmarkSummary && (
-              <p className="mt-4 rounded-2xl bg-[#fbfcfb] px-4 py-3 text-sm leading-6 text-[#60726b]">
+              <p className="mt-4 rounded-2xl bg-[#fbfcfb] px-4 py-3 text-sm leading-6 text-[#2e4a40]">
                 {props.benchmarkSummary}
               </p>
             )}

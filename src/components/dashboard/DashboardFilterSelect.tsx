@@ -31,7 +31,7 @@ export function DashboardFilterSelect({
 
   return (
     <div className="flex-1 basis-40 rounded-2xl border border-[#3ac56d]/35 bg-white px-4 py-3 shadow-[0_4px_14px_rgba(16,38,29,0.04)]">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-[#99a69f]">{label}</p>
+      <p className="text-[11px] uppercase tracking-[0.18em] text-[#5a6e66]">{label}</p>
       <div className="mt-1 flex items-center gap-2">
         <select
           value={value}
