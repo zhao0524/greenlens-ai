@@ -122,7 +122,7 @@ function ConnectPageInner() {
     }
 
     loadConnected()
-  }, [searchParams])
+  }, [nextParam, router, searchParams])
 
   const handleConnect = async (integrationId: string, connectUrl: string) => {
     setConnecting(integrationId)

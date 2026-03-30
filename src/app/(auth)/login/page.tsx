@@ -1,6 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
-import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -11,22 +12,20 @@ function LoginPageInner() {
   const [emailMode, setEmailMode] = useState(false)
   const [email, setEmail] = useState('')
   const [emailSent, setEmailSent] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [localError, setLocalError] = useState<string | null>(null)
   const supabase = createClient()
-
-  useEffect(() => {
-    const err = searchParams.get('error')
-    const detail = searchParams.get('detail')
-    if (err === 'auth_failed') {
-      setError(detail ? decodeURIComponent(detail) : 'Sign-in failed. Please try again.')
-    } else if (err === 'no_account') {
-      setError('No account found. Please sign up first.')
-    }
-  }, [searchParams])
+  const errorCode = searchParams.get('error')
+  const errorDetail = searchParams.get('detail')
+  const queryError = errorCode === 'auth_failed'
+    ? (errorDetail ? decodeURIComponent(errorDetail) : 'Sign-in failed. Please try again.')
+    : errorCode === 'no_account'
+      ? 'No account found. Please sign up first.'
+      : null
+  const error = localError ?? queryError
 
   const handleOAuth = async (provider: 'azure' | 'google' | 'github') => {
     setLoading(provider)
-    setError(null)
+    setLocalError(null)
     await supabase.auth.signInWithOAuth({
       provider,
       options: {
@@ -40,14 +39,14 @@ function LoginPageInner() {
   const handleEmailLogin = async () => {
     if (!email.trim()) return
     setLoading('email')
-    setError(null)
+    setLocalError(null)
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: `${window.location.origin}/auth/callback?intent=login` },
     })
     setLoading(null)
     if (otpError) {
-      setError(otpError.message)
+      setLocalError(otpError.message)
     } else {
       setEmailSent(true)
     }
@@ -57,7 +56,7 @@ function LoginPageInner() {
     <div className="hero-nature-bg min-h-screen flex flex-col">
       {/* Mini nav */}
       <div className="glass-header px-8 py-4 flex items-center gap-2.5">
-        <a href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+        <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(76,112,96,0.9)' }}>
             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -65,7 +64,7 @@ function LoginPageInner() {
             </svg>
           </div>
           <span className="text-white font-medium text-sm tracking-tight">GreenLens AI</span>
-        </a>
+        </Link>
       </div>
 
       {/* Centered card */}
@@ -100,14 +99,14 @@ function LoginPageInner() {
           {error && (
             <div className="mb-4 rounded-xl px-4 py-3" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }}>
               <p className="text-red-300 text-sm">{error}</p>
-              {searchParams.get('error') === 'no_account' && (
-                <a
+              {errorCode === 'no_account' && (
+                <Link
                   href="/signup"
                   className="mt-1 block text-sm underline underline-offset-2"
                   style={{ color: 'rgba(255,255,255,0.6)' }}
                 >
                   Create an account →
-                </a>
+                </Link>
               )}
             </div>
           )}
@@ -159,7 +158,7 @@ function LoginPageInner() {
                 {loading === 'email' ? 'Sending…' : 'Send sign-in link'}
               </button>
               <button
-                onClick={() => { setEmailMode(false); setError(null) }}
+                onClick={() => { setEmailMode(false); setLocalError(null) }}
                 className="w-full text-sm py-2"
                 style={{ color: 'rgba(255,255,255,0.45)' }}
               >

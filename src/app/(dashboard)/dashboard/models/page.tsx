@@ -5,8 +5,6 @@ import {
   DashboardBadge,
   DashboardBarRow,
   DashboardEmptyState,
-  DashboardFilterBar,
-  DashboardFilterPill,
   DashboardHeader,
   DashboardMetaPill,
   DashboardMiniStat,
@@ -224,7 +222,7 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
         />
 
         <Suspense>
-          <DashboardFilterBar>
+          <div className="grid gap-3 md:grid-cols-3">
             <DashboardFilterSelect
               label="Provider"
               paramKey="provider"
@@ -255,7 +253,7 @@ export default async function ModelsPage({ searchParams }: ModelsPageProps) {
                 ...availableReports.filter((r) => r.id !== report.id).map((r) => ({ label: r.reporting_period, value: r.id })),
               ]}
             />
-          </DashboardFilterBar>
+          </div>
         </Suspense>
 
         {!modelEfficiencyAvailable && (

@@ -6,7 +6,6 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const intent = searchParams.get('intent') ?? 'login'
-  const next = searchParams.get('next') ?? '/dashboard'
 
   // OAuth provider returned an error (e.g. user denied consent, misconfigured Azure app)
   const oauthError = searchParams.get('error')

@@ -8,14 +8,14 @@ import {
   resolvePersistedOAuthSuccess,
 } from '../src/lib/integrations/oauth-helpers'
 
-test('buildMicrosoftAuthorizeUrl forces admin consent in the authorization URL', () => {
+test('buildMicrosoftAuthorizeUrl uses the updated Microsoft consent prompt in the authorization URL', () => {
   const url = new URL(buildMicrosoftAuthorizeUrl({
     tenantId: 'tenant-123',
     clientId: 'client-123',
     siteUrl: 'http://localhost:3000',
   }))
 
-  assert.equal(url.searchParams.get('prompt'), 'admin_consent')
+  assert.equal(url.searchParams.get('prompt'), 'consent')
   assert.equal(url.searchParams.get('client_id'), 'client-123')
 })
 
