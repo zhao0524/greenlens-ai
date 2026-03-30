@@ -39,7 +39,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <>
           <Link
             href="/onboarding/connect"
-            className="block rounded-xl border border-white/10 bg-white/6 px-2 py-2 text-center text-[10px] text-white/75 transition hover:bg-white/10 hover:text-white"
+            className="block rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-center text-[11px] text-white/75 transition hover:bg-white/10 hover:text-white"
           >
             Integrations
           </Link>

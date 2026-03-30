@@ -27,15 +27,15 @@ export default function IncentiveCard({
         {estimatedValue && (
           <div className="shrink-0 text-right">
             <p className="text-sm font-semibold text-emerald-700">{estimatedValue}</p>
-            <p className="text-xs text-[#9aa7a0]">estimated value</p>
+            <p className="text-xs font-medium text-[#5a6e66]">estimated value</p>
           </div>
         )}
       </div>
-      <p className="text-sm leading-6 text-[#60726b]">{description}</p>
+      <p className="text-sm leading-6 text-[#2e4a40]">{description}</p>
       {actionRequired && (
         <div className="mt-4 rounded-2xl bg-[#fbfcfb] px-4 py-3">
-          <p className="text-xs font-medium uppercase tracking-[0.15em] text-[#9aa7a0]">Action required</p>
-          <p className="mt-1 text-xs leading-5 text-[#60726b]">{actionRequired}</p>
+          <p className="text-xs font-medium uppercase tracking-[0.15em] text-[#4a6459]">Action required</p>
+          <p className="mt-1 text-xs leading-5 text-[#2e4a40]">{actionRequired}</p>
         </div>
       )}
     </div>

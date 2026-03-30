@@ -32,10 +32,10 @@ export default function DecisionCard({ decision, index, href }: DecisionCardProp
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[#9aa7a0] text-sm font-mono">#{index}</span>
+              <span className="text-[#5a6e66] text-sm font-mono">#{index}</span>
               <h3 className="truncate font-semibold text-[#152820]">{decision.title}</h3>
             </div>
-            <p className="line-clamp-2 text-sm leading-6 text-[#60726b]">{decision.situation}</p>
+            <p className="line-clamp-2 text-sm leading-6 text-[#2e4a40]">{decision.situation}</p>
             <div className="flex flex-wrap gap-3 mt-3">
               {decision.carbonImpact && (
                 <span className="text-xs font-medium text-emerald-700">{decision.carbonImpact}</span>
@@ -44,12 +44,12 @@ export default function DecisionCard({ decision, index, href }: DecisionCardProp
                 <span className="text-xs font-medium text-blue-700">{decision.financialImpact}</span>
               )}
               {decision.effort && (
-                <span className="text-xs text-[#7f8f88]">Effort: {decision.effort}</span>
+                <span className="text-xs font-medium text-[#4a5e56]">Effort: {decision.effort}</span>
               )}
             </div>
           </div>
           <div className="shrink-0 text-right">
-            <p className="text-lg font-bold text-[#152820]">{decision.impactScore}<span className="text-sm text-[#9aa7a0]">/10</span></p>
+            <p className="text-lg font-bold text-[#152820]">{decision.impactScore}<span className="text-sm text-[#5a6e66]">/10</span></p>
             <div className="mt-1">
               <DashboardBadge tone={tierColor as 'green' | 'amber' | 'blue' | 'red' | 'slate'}>
               {decision.urgencyTier}

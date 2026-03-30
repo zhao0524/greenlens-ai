@@ -17,7 +17,7 @@ export default function DashboardError({
           </svg>
         </div>
         <h2 className="mb-2 text-xl font-semibold text-[#152820]">Something went wrong</h2>
-        <p className="mb-6 text-sm leading-6 text-[#7f8f88]">{error.message ?? 'An unexpected error occurred loading the dashboard.'}</p>
+        <p className="mb-6 text-sm leading-6 text-[#4a5e56]">{error.message ?? 'An unexpected error occurred loading the dashboard.'}</p>
         <button
           onClick={reset}
           className="rounded-2xl bg-[#3ac56d] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#35b964]"

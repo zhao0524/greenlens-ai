@@ -155,7 +155,7 @@ export default async function DecisionDetailPage({ params, searchParams }: Decis
             subtitle="The core operating situation that makes this recommendation relevant right now."
             badge={<DashboardBadge tone={urgencyTone as 'green' | 'amber' | 'blue' | 'red' | 'slate'}>{decision.urgencyTier}</DashboardBadge>}
           >
-            <p className="text-sm leading-7 text-[#60726b]">{decision.situation}</p>
+            <p className="text-sm leading-7 text-[#2e4a40]">{decision.situation}</p>
           </DashboardPanel>
 
           <DashboardPanel
@@ -218,7 +218,7 @@ export default async function DecisionDetailPage({ params, searchParams }: Decis
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#edf6f1] text-sm font-semibold text-[#2e6a54]">
                     {stepIndex + 1}
                   </span>
-                  <span className="text-sm leading-6 text-[#60726b]">{step}</span>
+                  <span className="text-sm leading-6 text-[#2e4a40]">{step}</span>
                 </li>
               ))}
             </ol>
@@ -237,7 +237,7 @@ export default async function DecisionDetailPage({ params, searchParams }: Decis
               subtitle="Primary risk considerations to account for if this recommendation is pursued."
               badge={<DashboardBadge tone="amber">Risk note</DashboardBadge>}
             >
-              <p className="text-sm leading-7 text-[#60726b]">{decision.risk}</p>
+              <p className="text-sm leading-7 text-[#2e4a40]">{decision.risk}</p>
             </DashboardPanel>
           ) : (
             <DashboardEmptyState
@@ -262,7 +262,7 @@ export default async function DecisionDetailPage({ params, searchParams }: Decis
                       <div className="flex items-center justify-between gap-4">
                         <div>
                           <p className="font-medium text-[#152820]">{related.decision.title}</p>
-                          <p className="mt-1 text-sm text-[#60726b]">{related.decision.impactScore}/10 impact · {related.decision.urgencyTier} urgency</p>
+                          <p className="mt-1 text-sm text-[#2e4a40]">{related.decision.impactScore}/10 impact · {related.decision.urgencyTier} urgency</p>
                         </div>
                         <DashboardBadge tone="slate">Open brief</DashboardBadge>
                       </div>

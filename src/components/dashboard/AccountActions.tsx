@@ -57,7 +57,7 @@ export default function AccountActions({ variant = 'default' }: AccountActionsPr
         disabled={busy !== null}
         className={
           isSidebar
-            ? 'block w-full rounded-xl border border-white/10 bg-white/6 px-2 py-2 text-center text-[10px] font-medium text-white/80 transition hover:bg-white/10 hover:text-white disabled:opacity-50'
+            ? 'block w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2 text-center text-[11px] font-medium text-white/80 transition hover:bg-white/10 hover:text-white disabled:opacity-50'
             : 'rounded-2xl border border-[#dce9e2] bg-[#f6faf8] px-4 py-2 text-sm font-medium text-[#1d3b2e] transition hover:border-[#b7d2c3] hover:bg-[#edf6f1] disabled:opacity-50'
         }
       >
@@ -69,7 +69,7 @@ export default function AccountActions({ variant = 'default' }: AccountActionsPr
         disabled={busy !== null}
         className={
           isSidebar
-            ? 'block w-full rounded-xl border border-red-300/40 bg-red-500/12 px-2 py-2 text-center text-[10px] font-medium text-red-100 transition hover:bg-red-500/18 disabled:opacity-50'
+            ? 'block w-full rounded-xl border border-red-300/40 bg-red-500/12 px-3 py-2 text-center text-[11px] font-medium text-red-100 transition hover:bg-red-500/18 disabled:opacity-50'
             : 'rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100 disabled:opacity-50'
         }
       >

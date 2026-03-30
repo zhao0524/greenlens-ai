@@ -18,14 +18,14 @@ export default function MitigationCard({
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1 min-w-0">
           <p className="font-medium text-[#152820]">{strategy}</p>
-          <p className="mt-1 text-sm leading-6 text-[#60726b]">{description}</p>
+          <p className="mt-1 text-sm leading-6 text-[#2e4a40]">{description}</p>
           {effort && (
-            <p className="mt-2 text-xs text-[#7f8f88]">Effort: {effort}</p>
+            <p className="mt-2 text-xs font-medium text-[#4a5e56]">Effort: {effort}</p>
           )}
         </div>
         <div className="text-right shrink-0 ml-4">
           <span className="text-sm font-medium text-emerald-700">{expectedScoreImprovement}</span>
-          <p className="text-xs text-[#9aa7a0]">{timeframe}</p>
+          <p className="text-xs font-medium text-[#5a6e66]">{timeframe}</p>
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@ interface TrendChartProps {
 export default function TrendChart({ data }: TrendChartProps) {
   if (!data || data.length === 0) {
     return (
-      <div className="flex h-48 items-center justify-center text-sm text-[#7f8f88]">
+      <div className="flex h-48 items-center justify-center text-sm text-[#4a5e56]">
         No trend data available
       </div>
     )
@@ -18,8 +18,8 @@ export default function TrendChart({ data }: TrendChartProps) {
     <ResponsiveContainer width="100%" height={200}>
       <LineChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
         <CartesianGrid stroke="#edf1ee" vertical={false} />
-        <XAxis dataKey="date" tick={{ fill: '#9aa7a0', fontSize: 11 }} tickLine={false} axisLine={false} />
-        <YAxis tick={{ fill: '#9aa7a0', fontSize: 11 }} tickLine={false} axisLine={false} />
+        <XAxis dataKey="date" tick={{ fill: '#5a6e66', fontSize: 11 }} tickLine={false} axisLine={false} />
+        <YAxis tick={{ fill: '#5a6e66', fontSize: 11 }} tickLine={false} axisLine={false} />
         <Tooltip
           contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #edf1ee', borderRadius: '14px' }}
           labelStyle={{ color: '#152820' }}
