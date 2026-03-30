@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import AnalysisTriggerScreen from '@/components/dashboard/AnalysisTriggerScreen'
@@ -32,8 +33,6 @@ import {
   Bot,
   Gauge,
 } from 'lucide-react'
-
-export const dynamic = 'force-dynamic'
 
 const clusterLabels: Record<string, { label: string; tone: 'blue' | 'amber' | 'green' | 'slate'; description: string }> = {
   // current values (from classifyBehavior in usage-analyst.ts)
