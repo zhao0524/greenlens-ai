@@ -25,6 +25,10 @@ import {
   Droplets,
   FileText,
   Leaf,
+  ShieldCheck,
+  TrendingDown,
+  Trophy,
+  Globe2,
 } from 'lucide-react'
 
 interface ESGPageProps {
@@ -102,6 +106,63 @@ export default async function ESGPage({ searchParams }: ESGPageProps) {
             message={sectionAvailability.esg.message ?? 'Connect OpenAI and rerun analysis to populate this section.'}
           />
         )}
+
+        {/* Leadership brief — always included in print/export */}
+        <DashboardPanel
+          title="Leadership brief"
+          subtitle="Business case summary for executive and board-level audiences. Included in every export."
+          badge={<DashboardBadge tone="green">Print-ready</DashboardBadge>}
+        >
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl bg-[#f0f5f3] px-4 py-4">
+              <div className="mb-2 flex items-center gap-2">
+                <TrendingDown className="h-4 w-4 text-[#4C7060]" />
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#4C7060]">Financial upside</p>
+              </div>
+              <p className="text-sm leading-6 text-[#152820]">
+                Right-sizing AI model usage directly reduces data centre energy consumption, cooling infrastructure costs, and water bills —
+                measurable savings that flow directly to the organisation&apos;s operating budget.
+              </p>
+            </div>
+            <div className="rounded-2xl bg-[#f0f5f3] px-4 py-4">
+              <div className="mb-2 flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-[#4C7060]" />
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#4C7060]">Regulatory compliance</p>
+              </div>
+              <p className="text-sm leading-6 text-[#152820]">
+                EU CSRD mandates disclosure of material environmental impacts — including digital and AI-related emissions — for large organisations with EU operations.
+                Non-compliance carries financial penalties and risks investor-facing restatements. This report supports that obligation.
+              </p>
+            </div>
+            <div className="rounded-2xl bg-[#f0f5f3] px-4 py-4">
+              <div className="mb-2 flex items-center gap-2">
+                <Globe2 className="h-4 w-4 text-[#4C7060]" />
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#4C7060]">International incentives</p>
+              </div>
+              <p className="text-sm leading-6 text-[#152820]">
+                Tax credits, green technology grants, and sustainability-linked financing are available across EU, US, and Asia-Pacific jurisdictions
+                for organisations that can demonstrate measurable reductions in their AI environmental footprint. See the Incentives section for matched opportunities.
+              </p>
+            </div>
+            <div className="rounded-2xl bg-[#f0f5f3] px-4 py-4">
+              <div className="mb-2 flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-[#4C7060]" />
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#4C7060]">Recognition & positioning</p>
+              </div>
+              <p className="text-sm leading-6 text-[#152820]">
+                Organisations with verified AI sustainability metrics are eligible for CDP A-List recognition, Science Based Targets certification,
+                and inclusion in ESG indices — providing competitive differentiation with customers, investors, and regulators.
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 rounded-2xl border border-[#d6e4de] bg-white px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#9aa7a0]">Data privacy note</p>
+            <p className="mt-1.5 text-sm leading-6 text-[#60726b]">
+              GreenLens measures the organisation&apos;s AI usage in aggregate only. No individual employee data, prompt content, or personal usage patterns
+              are captured, stored, or reported. All metrics represent organisation-wide totals derived from provider admin APIs.
+            </p>
+          </div>
+        </DashboardPanel>
 
         <DashboardStatGrid>
           <DashboardStatCard

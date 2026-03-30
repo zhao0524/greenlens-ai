@@ -105,10 +105,18 @@ function buildPrompt(
     ? `$${licenseResult.potentialAnnualSavings.toLocaleString()}`
     : 'Not modeled for all connected license providers.'
 
+  const officeList = company?.international_offices?.length
+    ? company.international_offices.join(', ')
+    : 'Global'
+
   return `
 You are writing the executive intelligence section of an AI governance and sustainability report.
 Your audience is a CTO, CFO, or Chief Sustainability Officer at a large enterprise.
-Plain English only. No technical jargon.
+Plain English only. No technical jargon. Frame everything in terms of financial impact, regulatory risk, and competitive positioning — not environmental idealism.
+
+IMPORTANT CONTEXT:
+- This report covers the ORGANISATION's AI footprint in aggregate. It does NOT track individual employees, their prompts, or their personal usage. Make this clear when relevant.
+- International offices: ${officeList}. Where applicable, tailor incentives and obligations to those jurisdictions.
 
 PIPELINE FINDINGS:
 
@@ -143,6 +151,14 @@ ${JSON.stringify(incentives?.slice(0, 5))}
 
 Return ONLY valid JSON. No markdown. No explanation.
 
+REQUIREMENTS FOR INCENTIVES AND BENEFITS:
+- Cover ALL relevant categories: tax credits, grants, ESG compliance obligations (and penalties for non-compliance), reduced infrastructure costs (data centre cooling, water bills), awards and industry recognition programs, and publicity/reputational benefits.
+- For companies with European offices: include CSRD mandatory disclosure obligations and penalties for non-compliance, EU Green Deal-aligned grants, and relevant EU taxonomy benefits.
+- For companies with Asia-Pacific offices: include relevant regional green tech incentives, sustainability certifications, and government-backed grants.
+- Include at least one entry about industry awards or third-party certification programs (e.g. CDP A-List, Science Based Targets, sustainability indices) that this company could qualify for.
+- Include at least one entry about the financial benefit of reduced data centre cooling and water consumption costs from more efficient AI usage.
+- Where there are regulatory penalties for non-disclosure or non-compliance with ESG frameworks in this company's jurisdictions, explicitly quantify or describe the penalty risk.
+
 {
   "decisions": [
     {
@@ -153,18 +169,19 @@ Return ONLY valid JSON. No markdown. No explanation.
       "financialImpact": "dollar figure as string",
       "theDecision": "one sentence, what the exec decides",
       "teamEffort": "effort estimate only, no instructions",
-      "riskOfInaction": "1-2 sentences",
+      "riskOfInaction": "1-2 sentences covering financial, regulatory, or reputational downside",
       "urgency": "Act Now" | "Act This Quarter" | "Act Before Renewal" | "Monitor",
       "impactScore": number 1-10
     }
   ],
   "incentivesAndBenefits": [
     {
-      "title": "incentive name",
-      "description": "plain english description of what this means for this company",
-      "estimatedValue": "dollar or compliance value",
-      "region": "where this applies",
-      "actionRequired": "what the company needs to do to access this benefit"
+      "title": "incentive or obligation name",
+      "description": "plain english description of what this means for this company — frame financial, regulatory, and reputational value in leadership terms",
+      "estimatedValue": "dollar amount, penalty amount, or qualitative value",
+      "region": "jurisdiction where this applies (e.g. EU, United States, Singapore, Global)",
+      "actionRequired": "what the company needs to do to access the benefit or avoid the penalty",
+      "category": "Financial" | "Regulatory" | "Reputational" | "Operational"
     }
   ],
   "mitigationStrategies": [
@@ -177,11 +194,12 @@ Return ONLY valid JSON. No markdown. No explanation.
     }
   ],
   "hypeCycleContext": "2-3 sentences framing where AI sits in the Gartner Hype Cycle and why recording this data now positions the company advantageously when AI moves to the Slope of Enlightenment.",
-  "executiveNarrative": "3-4 sentences for the report cover. Direct, factual.",
-  "esgDisclosureText": "2-3 paragraphs for CSRD or GRI report. Professional tone. Cites methodology."
+  "executiveNarrative": "3-4 sentences for the report cover. Direct, factual. Lead with financial and regulatory implications.",
+  "esgDisclosureText": "2-3 paragraphs for CSRD or GRI report. Professional tone. Cites methodology. Clarify that data covers organisational AI usage in aggregate and does not capture individual employee activity."
 }
 
-Produce 2-4 decisions. Sort by impactScore descending. Produce 2-3 incentives most relevant to this company.
+Produce 2-4 decisions. Sort by impactScore descending.
+Produce 4-6 incentives covering financial, regulatory (including penalty exposure), reputational, and operational categories — with geographic spread across the company's office regions.
 Produce 3 mitigation strategies specifically for improving a score of ${carbonWaterResult.modelEfficiencyScore}/100.
 `
 }
