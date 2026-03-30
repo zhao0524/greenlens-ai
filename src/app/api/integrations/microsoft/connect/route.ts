@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server'
+import { buildMicrosoftAuthorizeUrl } from '@/lib/integrations/oauth-helpers'
 
 export async function GET() {
-  const params = new URLSearchParams({
-    client_id: process.env.MICROSOFT_CLIENT_ID!,
-    response_type: 'code',
-    redirect_uri: `${process.env.NEXT_PUBLIC_SITE_URL}/api/integrations/microsoft/callback`,
-    scope: 'https://graph.microsoft.com/Reports.Read.All offline_access',
-    response_mode: 'query'
-  })
-  return NextResponse.redirect(
-    `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${params}`
-  )
+  // Use the specific tenant ID (not /common/) so admin consent flows correctly.
+  // Reports.Read.All and Directory.Read.All require admin consent — prompt=admin_consent
+  // forces the admin consent screen so a tenant Global Admin can approve.
+  const tenantId = process.env.MICROSOFT_TENANT_ID ?? 'common'
+  return NextResponse.redirect(buildMicrosoftAuthorizeUrl({
+    tenantId,
+    clientId: process.env.MICROSOFT_CLIENT_ID!,
+    siteUrl: process.env.NEXT_PUBLIC_SITE_URL!,
+  }))
 }

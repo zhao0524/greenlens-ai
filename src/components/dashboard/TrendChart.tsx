@@ -8,7 +8,7 @@ interface TrendChartProps {
 export default function TrendChart({ data }: TrendChartProps) {
   if (!data || data.length === 0) {
     return (
-      <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
+      <div className="flex h-48 items-center justify-center text-sm text-[#7f8f88]">
         No trend data available
       </div>
     )
@@ -17,15 +17,15 @@ export default function TrendChart({ data }: TrendChartProps) {
   return (
     <ResponsiveContainer width="100%" height={200}>
       <LineChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-        <XAxis dataKey="date" tick={{ fill: '#9CA3AF', fontSize: 11 }} tickLine={false} axisLine={false} />
-        <YAxis tick={{ fill: '#9CA3AF', fontSize: 11 }} tickLine={false} axisLine={false} />
+        <CartesianGrid stroke="#edf1ee" vertical={false} />
+        <XAxis dataKey="date" tick={{ fill: '#9aa7a0', fontSize: 11 }} tickLine={false} axisLine={false} />
+        <YAxis tick={{ fill: '#9aa7a0', fontSize: 11 }} tickLine={false} axisLine={false} />
         <Tooltip
-          contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
-          labelStyle={{ color: '#D1D5DB' }}
-          itemStyle={{ color: '#34D399' }}
+          contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #edf1ee', borderRadius: '14px' }}
+          labelStyle={{ color: '#152820' }}
+          itemStyle={{ color: '#2e6a54' }}
         />
-        <Line type="monotone" dataKey="requests" stroke="#34D399" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="requests" stroke="#38b76a" strokeWidth={2.5} dot={false} />
       </LineChart>
     </ResponsiveContainer>
   )

@@ -1,26 +1,77 @@
 import { calculateCarbon } from '@/lib/calculations/carbon'
 import { calculateWater } from '@/lib/calculations/water'
-import type { NormalizedUsage } from './usage-analyst'
+import {
+  isFrontierModel,
+  suggestSmallerModel,
+} from '@/lib/analysis/model-classification'
+import type { StatAnalysisRunResult, TaskCluster } from '@/lib/analysis/run-stat-analysis'
+import type { UsageAnalysisResult } from './usage-analyst'
+
+type CarbonCalculationResult = Awaited<ReturnType<typeof calculateCarbon>>
+
+export interface CarbonWaterAccountantResult {
+  totalCarbonKg: number | null
+  carbonByModel: Array<{ model: string; carbonKg: number; percentage: number }>
+  alternativeCarbonKg: number | null
+  carbonSavingsKg: number | null
+  carbonSavingsPercentage: number | null
+  carbonMethodology: string | null
+  totalWaterLiters: number | null
+  totalWaterBottles: number | null
+  alternativeWaterLiters: number | null
+  waterSavingsLiters: number | null
+  waterMethodology: string | null
+  modelEfficiencyScore: number | null
+  modelTaskMismatchRate: number | null
+  mismatchedModelClusters: Array<{
+    model: string
+    taskCategory: string
+    suggestedAlternative: string | null
+  }>
+  unavailableReason: string | null
+}
 
 export async function runCarbonWaterAccountant(
-  usageResult: { normalizedUsage: NormalizedUsage[], frontierModelPercentage: number },
-  statResult: any
-) {
-  const carbon = await calculateCarbon(usageResult.normalizedUsage)
+  usageResult: Pick<UsageAnalysisResult, 'normalizedUsage' | 'frontierModelPercentage' | 'availability'>,
+  statResult: StatAnalysisRunResult,
+  precomputedCarbon?: CarbonCalculationResult
+): Promise<CarbonWaterAccountantResult> {
+  if (usageResult.availability.status === 'unavailable') {
+    return {
+      totalCarbonKg: null,
+      carbonByModel: [],
+      alternativeCarbonKg: null,
+      carbonSavingsKg: null,
+      carbonSavingsPercentage: null,
+      carbonMethodology: null,
+      totalWaterLiters: null,
+      totalWaterBottles: null,
+      alternativeWaterLiters: null,
+      waterSavingsLiters: null,
+      waterMethodology: null,
+      modelEfficiencyScore: null,
+      modelTaskMismatchRate: null,
+      mismatchedModelClusters: [],
+      unavailableReason: usageResult.availability.message,
+    }
+  }
+
+  const carbon = precomputedCarbon ?? await calculateCarbon(usageResult.normalizedUsage)
   const primaryRegion = usageResult.normalizedUsage[0]?.region?.includes('eu')
     ? 'europe' : usageResult.normalizedUsage[0]?.region?.includes('west') ? 'us-west' : 'us-east'
   const water = calculateWater(carbon, primaryRegion)
 
   // Use NLP task clustering from stat analysis to identify mismatches
   // more accurately than threshold rules alone
-  const taskClusters = statResult?.task_clustering?.clusters || []
-  const mismatchedClusters = taskClusters.filter((c: any) =>
-    c.task_category === 'classification_routing' &&
-    ['gpt-4', 'claude-3-opus'].some((m: string) => c.model?.includes(m))
+  const taskClusters: TaskCluster[] =
+    'task_clustering' in statResult ? statResult.task_clustering.clusters ?? [] : []
+  const mismatchedClusters = taskClusters.filter((cluster) =>
+    cluster.task_category === 'classification_routing' &&
+    isFrontierModel(cluster.model)
   )
 
   const mismatchedRequests = usageResult.normalizedUsage
-    .filter(u => mismatchedClusters.some((c: any) => c.model === u.model))
+    .filter((usage) => mismatchedClusters.some((cluster) => cluster.model === usage.model))
     .reduce((s, u) => s + u.totalRequests, 0)
   const totalRequests = usageResult.normalizedUsage.reduce((s, u) => s + u.totalRequests, 0)
 
@@ -39,11 +90,11 @@ export async function runCarbonWaterAccountant(
     modelEfficiencyScore: carbon.modelEfficiencyScore,
     modelTaskMismatchRate: totalRequests > 0
       ? Math.round((mismatchedRequests / totalRequests) * 100) : 0,
-    mismatchedModelClusters: mismatchedClusters.map((c: any) => ({
-      model: c.model,
-      taskCategory: c.task_category,
-      suggestedAlternative: c.model?.includes('gpt-4') ? 'gpt-4o-mini'
-        : c.model?.includes('claude-3-opus') ? 'claude-3-haiku' : 'a smaller model'
-    }))
+    mismatchedModelClusters: mismatchedClusters.map((cluster) => ({
+      model: cluster.model,
+      taskCategory: cluster.task_category,
+      suggestedAlternative: suggestSmallerModel(cluster.model)
+    })),
+    unavailableReason: null,
   }
 }

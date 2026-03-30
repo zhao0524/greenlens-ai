@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { DashboardBadge } from '@/components/dashboard/DashboardPrimitives'
 
 interface Decision {
   title: string
@@ -13,44 +14,47 @@ interface Decision {
 interface DecisionCardProps {
   decision: Decision
   index: number
+  href?: string
 }
 
 const urgencyColors: Record<string, string> = {
-  high: 'bg-red-900 text-red-300',
-  medium: 'bg-yellow-900 text-yellow-300',
-  low: 'bg-blue-900 text-blue-300',
+  high: 'red',
+  medium: 'amber',
+  low: 'blue',
 }
 
-export default function DecisionCard({ decision, index }: DecisionCardProps) {
-  const tierColor = urgencyColors[decision.urgencyTier?.toLowerCase()] ?? 'bg-gray-700 text-gray-300'
+export default function DecisionCard({ decision, index, href }: DecisionCardProps) {
+  const tierColor = urgencyColors[decision.urgencyTier?.toLowerCase()] ?? 'slate'
 
   return (
-    <Link href={`/dashboard/decisions/${index}`}>
-      <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 hover:border-gray-500 transition-colors cursor-pointer">
+    <Link href={href ?? `/dashboard/decisions/${index}`}>
+      <div className="cursor-pointer rounded-[20px] border border-[#eff2ef] bg-white p-5 shadow-[0_8px_26px_rgba(16,38,29,0.05)] transition hover:border-[#d5e3db] hover:shadow-[0_12px_30px_rgba(16,38,29,0.08)]">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-gray-500 text-sm font-mono">#{index}</span>
-              <h3 className="text-white font-semibold truncate">{decision.title}</h3>
+              <span className="text-[#9aa7a0] text-sm font-mono">#{index}</span>
+              <h3 className="truncate font-semibold text-[#152820]">{decision.title}</h3>
             </div>
-            <p className="text-gray-400 text-sm line-clamp-2">{decision.situation}</p>
+            <p className="line-clamp-2 text-sm leading-6 text-[#60726b]">{decision.situation}</p>
             <div className="flex flex-wrap gap-3 mt-3">
               {decision.carbonImpact && (
-                <span className="text-green-400 text-xs">{decision.carbonImpact}</span>
+                <span className="text-xs font-medium text-emerald-700">{decision.carbonImpact}</span>
               )}
               {decision.financialImpact && (
-                <span className="text-blue-400 text-xs">{decision.financialImpact}</span>
+                <span className="text-xs font-medium text-blue-700">{decision.financialImpact}</span>
               )}
               {decision.effort && (
-                <span className="text-gray-500 text-xs">Effort: {decision.effort}</span>
+                <span className="text-xs text-[#7f8f88]">Effort: {decision.effort}</span>
               )}
             </div>
           </div>
           <div className="shrink-0 text-right">
-            <p className="text-white font-bold text-lg">{decision.impactScore}<span className="text-gray-500 text-sm">/10</span></p>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tierColor}`}>
+            <p className="text-lg font-bold text-[#152820]">{decision.impactScore}<span className="text-sm text-[#9aa7a0]">/10</span></p>
+            <div className="mt-1">
+              <DashboardBadge tone={tierColor as 'green' | 'amber' | 'blue' | 'red' | 'slate'}>
               {decision.urgencyTier}
-            </span>
+              </DashboardBadge>
+            </div>
           </div>
         </div>
       </div>
