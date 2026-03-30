@@ -41,19 +41,19 @@ export default function ReportAvailabilityBanner({ report }: ReportAvailabilityB
   )]
 
   return (
-    <div className="border-b border-amber-800 bg-amber-950/60 px-6 py-4">
-      <p className="text-sm font-medium text-amber-100">
+    <div className="mx-4 mt-4 rounded-[24px] border border-amber-200 bg-[#fffaf0] px-5 py-4 lg:mx-6">
+      <p className="text-sm font-medium text-amber-950">
         This report is partial. GreenLens only populated the sections backed by supported providers in this run.
       </p>
       {availableSections.length > 0 && (
-        <p className="mt-2 text-sm text-amber-200">
+        <p className="mt-2 text-sm text-amber-800">
           Available: {availableSections.map((section) => formatReportSectionLabel(section)).join(', ')}.
         </p>
       )}
       {unavailableSections.length > 0 && (
         <div className="mt-2 space-y-1">
           {listSections(unavailableSections, sectionAvailability).map((entry) => (
-            <p key={entry} className="text-sm text-amber-200/90">
+            <p key={entry} className="text-sm text-amber-800/90">
               {entry}
             </p>
           ))}
@@ -62,7 +62,7 @@ export default function ReportAvailabilityBanner({ report }: ReportAvailabilityB
       {unsupportedProviderNotes.length > 0 && (
         <div className="mt-2 space-y-1">
           {unsupportedProviderNotes.slice(0, 3).map((note) => (
-            <p key={note} className="text-xs text-amber-300/80">
+            <p key={note} className="text-xs text-amber-700/85">
               {note}
             </p>
           ))}

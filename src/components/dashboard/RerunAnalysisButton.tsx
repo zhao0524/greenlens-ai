@@ -44,16 +44,16 @@ export default function RerunAnalysisButton({ initialJobState = null }: Props) {
   return (
     <div className="flex items-center gap-3">
       {error && !loading && (
-        <span className="text-red-400 text-xs">{error}</span>
+        <span className="text-red-600 text-xs">{error}</span>
       )}
       <button
         onClick={triggerAnalysis}
         disabled={loading}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed text-gray-200 border border-gray-600 transition-colors"
+        className="flex items-center gap-1.5 rounded-2xl border border-[#cfe1d8] bg-white px-4 py-2 text-sm font-medium text-[#1d3b2e] shadow-sm transition-colors hover:border-[#aaccb9] hover:bg-[#edf6f1] disabled:cursor-not-allowed disabled:opacity-40"
       >
         {loading ? (
           <>
-            <span className="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+            <span className="h-3.5 w-3.5 rounded-full border-2 border-[#6b7d74] border-t-transparent animate-spin" />
             {label}
           </>
         ) : (

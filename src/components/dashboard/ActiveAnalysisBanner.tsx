@@ -33,14 +33,14 @@ export default function ActiveAnalysisBanner({
   const refreshedAt = freshness?.as_of ?? null
 
   return (
-    <div className="border-b border-amber-800 bg-amber-950/70 px-6 py-3">
-      <p className="text-sm text-amber-200">
+    <div className="mx-4 mt-4 rounded-[24px] border border-amber-200 bg-amber-50 px-5 py-4 lg:mx-6">
+      <p className="text-sm text-amber-900">
         A newer analysis is running. The dashboard below still reflects your last completed report
         {latestCompleteDay ? ` through ${latestCompleteDay}` : reportingPeriod ? ` for ${reportingPeriod}` : ''}.
         It will refresh automatically when the new run finishes.
       </p>
       {refreshedAt && (
-        <p className="mt-1 text-xs text-amber-300/70">
+        <p className="mt-1 text-xs text-amber-700/80">
           Last completed report visible as of {new Date(refreshedAt).toLocaleString()}.
         </p>
       )}

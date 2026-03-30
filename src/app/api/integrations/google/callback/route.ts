@@ -38,7 +38,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const redirectUri = `${process.env.NEXT_PUBLIC_SITE_URL}/api/integrations/google/callback`
+    const redirectUri = `${process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')}/api/integrations/google/callback`
     const tokenData = await getGoogleAccessToken(code, redirectUri)
     const { access_token, refresh_token, expires_in } = tokenData
 

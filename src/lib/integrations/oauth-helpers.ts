@@ -38,14 +38,14 @@ export function buildMicrosoftAuthorizeUrl({
   const params = new URLSearchParams({
     client_id: clientId,
     response_type: 'code',
-    redirect_uri: `${siteUrl}/api/integrations/microsoft/callback`,
+    redirect_uri: `${siteUrl.replace(/\/$/, '')}/api/integrations/microsoft/callback`,
     scope: [
       'https://graph.microsoft.com/Reports.Read.All',
       'https://graph.microsoft.com/Directory.Read.All',
       'offline_access',
     ].join(' '),
     response_mode: 'query',
-    prompt: 'admin_consent',
+    prompt: 'consent',
   })
 
   return `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?${params}`

@@ -8,7 +8,7 @@ interface FootprintChartProps {
 export default function FootprintChart({ data }: FootprintChartProps) {
   if (!data || data.length === 0) {
     return (
-      <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
+      <div className="flex h-48 items-center justify-center text-sm text-[#7f8f88]">
         No footprint data available
       </div>
     )
@@ -17,24 +17,24 @@ export default function FootprintChart({ data }: FootprintChartProps) {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 40 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+        <CartesianGrid stroke="#edf1ee" vertical={false} />
         <XAxis
           dataKey="model"
-          tick={{ fill: '#9CA3AF', fontSize: 10 }}
+          tick={{ fill: '#9aa7a0', fontSize: 10 }}
           tickLine={false}
           axisLine={false}
           angle={-30}
           textAnchor="end"
           interval={0}
         />
-        <YAxis tick={{ fill: '#9CA3AF', fontSize: 11 }} tickLine={false} axisLine={false} />
+        <YAxis tick={{ fill: '#9aa7a0', fontSize: 11 }} tickLine={false} axisLine={false} />
         <Tooltip
-          contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
-          labelStyle={{ color: '#D1D5DB' }}
-          itemStyle={{ color: '#34D399' }}
+          contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #edf1ee', borderRadius: '14px' }}
+          labelStyle={{ color: '#152820' }}
+          itemStyle={{ color: '#2e6a54' }}
           formatter={(value) => [`${Number(value).toFixed(3)} kg CO2e`, 'Carbon']}
         />
-        <Bar dataKey="carbon_kg" fill="#34D399" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="carbon_kg" fill="#38b76a" radius={[8, 8, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   )

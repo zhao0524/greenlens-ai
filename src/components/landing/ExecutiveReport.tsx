@@ -1,9 +1,17 @@
-import { BarChart3, Droplets, Zap, TrendingDown, TrendingUp, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  BarChart3,
+  CheckCircle2,
+  Droplets,
+  TrendingDown,
+  TrendingUp,
+  Zap
+} from 'lucide-react';
 
 interface Trend {
   value: string;
   direction: 'up' | 'down' | 'warning';
-  tone?: 'red' | 'green' | 'amber';
+  positive?: boolean;
 }
 
 interface MetricCardProps {
@@ -14,28 +22,25 @@ interface MetricCardProps {
   trend?: Trend;
 }
 
-const trendClass = (trend: Trend) => {
-  if (trend.tone === 'amber' || trend.direction === 'warning') return 'text-amber-600';
-  if (trend.tone === 'green') return 'text-[#2d6a4f]';
-  if (trend.tone === 'red') return 'text-red-500';
-  return 'text-red-500';
-};
-
 const MetricCard = ({ icon, label, value, unit, trend }: MetricCardProps) => (
-  <div className="bg-[#f7f7f7] rounded-md p-2.5 border border-[#e8e8e8]">
-    <div className="flex items-center gap-1.5 text-[#666] mb-1.5">
-      <span className="text-[#4C7060] [&>svg]:w-3 [&>svg]:h-3">{icon}</span>
-      <span className="text-[10px] uppercase tracking-wide leading-tight">{label}</span>
+  <div className="rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-4">
+    <div className="mb-3 flex items-center gap-2 text-[#666]">
+      {icon}
+      <span className="text-xs uppercase tracking-wide">{label}</span>
     </div>
-    <div className="flex items-baseline gap-1 mb-0.5">
-      <span className="text-lg font-semibold text-[#1a1a1a] tabular-nums">{value}</span>
-      <span className="text-[11px] text-[#666]">{unit}</span>
+    <div className="mb-1 flex items-baseline gap-2">
+      <span className="text-2xl font-medium text-[#236b42] lg:text-3xl">{value}</span>
+      <span className="text-sm text-[#666]">{unit}</span>
     </div>
     {trend && (
-      <div className={`flex items-center gap-0.5 text-[10px] font-medium leading-tight ${trendClass(trend)}`}>
-        {trend.direction === 'down' && <TrendingDown className="w-2.5 h-2.5 shrink-0" />}
-        {trend.direction === 'up' && <TrendingUp className="w-2.5 h-2.5 shrink-0" />}
-        {trend.direction === 'warning' && <AlertTriangle className="w-2.5 h-2.5 shrink-0" />}
+      <div
+        className={`flex items-center gap-1 text-xs ${
+          trend.direction === 'warning' ? 'text-amber-600' : trend.positive ? 'text-[#236b42]' : 'text-red-500'
+        }`}
+      >
+        {trend.direction === 'down' && <TrendingDown className="h-3 w-3" />}
+        {trend.direction === 'up' && <TrendingUp className="h-3 w-3" />}
+        {trend.direction === 'warning' && <AlertTriangle className="h-3 w-3" />}
         <span>{trend.value}</span>
       </div>
     )}
@@ -44,119 +49,115 @@ const MetricCard = ({ icon, label, value, unit, trend }: MetricCardProps) => (
 
 const ExecutiveReport = () => {
   return (
-    <div className="bg-white p-3 sm:p-4 text-[13px] leading-snug">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-3 pb-3 border-b border-[#e5e5e5]">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-6 h-6 rounded bg-[#4C7060] flex items-center justify-center shrink-0">
-              <BarChart3 className="w-3.5 h-3.5 text-white" strokeWidth={1.5} />
+    <div className="bg-white p-6 lg:p-8">
+      <div className="mb-8 flex items-center justify-between border-b border-[#e5e5e5] pb-6">
+        <div>
+          <div className="mb-2 flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#4C7060]">
+              <BarChart3 className="h-5 w-5 text-white" strokeWidth={1.5} />
             </div>
-            <span className="font-medium text-sm text-[#1a1a1a]">GreenLens AI</span>
+            <span className="text-lg font-medium text-[#1a1a1a]">GreenLens AI</span>
           </div>
-          <h2 className="text-sm font-semibold text-[#1a1a1a] leading-tight">Monthly AI impact briefing</h2>
-          <p className="text-[11px] text-[#888] mt-0.5">Nov 2023 · Acme Corporation</p>
+          <h2 className="text-xl font-medium text-[#1a1a1a] lg:text-2xl">Monthly AI Impact Briefing</h2>
+          <p className="mt-1 text-sm text-[#666]">November 2025 | Acme Corporation</p>
         </div>
-        <div className="hidden sm:block text-right shrink-0">
-          <p className="text-[10px] text-[#888] uppercase tracking-wide">Reporting period</p>
-          <p className="text-[11px] text-[#333] font-medium whitespace-nowrap">Nov 1–30, 2023</p>
+        <div className="hidden text-right sm:block">
+          <p className="mb-1 text-xs uppercase tracking-wide text-[#888]">Report Period</p>
+          <p className="text-sm text-[#333]">Nov 1 - Nov 30, 2025</p>
         </div>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 gap-2 mb-3">
+      <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <MetricCard
-          icon={<BarChart3 strokeWidth={1.5} />}
-          label="Carbon"
+          icon={<BarChart3 className="h-4 w-4" strokeWidth={1.5} />}
+          label="Carbon Footprint"
           value="847"
-          unit="kg CO₂e"
-          trend={{ value: '↑ 12% vs prior month', direction: 'up', tone: 'red' }}
+          unit="kg CO2e"
+          trend={{ value: '12% vs last month', direction: 'down', positive: true }}
         />
         <MetricCard
-          icon={<Droplets strokeWidth={1.5} />}
-          label="Water"
+          icon={<Droplets className="h-4 w-4" strokeWidth={1.5} />}
+          label="Water Usage"
           value="12.4K"
-          unit="L"
-          trend={{ value: '↑ 8% vs prior month', direction: 'up', tone: 'red' }}
+          unit="liters"
+          trend={{ value: '8% vs last month', direction: 'up', positive: false }}
         />
         <MetricCard
-          icon={<Zap strokeWidth={1.5} />}
-          label="Licenses"
+          icon={<Zap className="h-4 w-4" strokeWidth={1.5} />}
+          label="License Utilization"
           value="67%"
-          unit="in use"
-          trend={{ value: '↑ 6% vs prior month', direction: 'up', tone: 'green' }}
+          unit="active"
+          trend={{ value: '5% vs last month', direction: 'up', positive: true }}
         />
         <MetricCard
-          icon={<AlertTriangle strokeWidth={1.5} />}
-          label="Cost exposure"
+          icon={<AlertTriangle className="h-4 w-4" strokeWidth={1.5} />}
+          label="Cost at Risk"
           value="$48K"
-          unit="/ yr"
-          trend={{ value: 'Renewal in 4 days', direction: 'warning' }}
+          unit="annual"
+          trend={{ value: 'renewal in 47 days', direction: 'warning' }}
         />
       </div>
 
-      {/* Charts — single row, compact */}
-      <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 mb-3">
-        <div className="sm:col-span-3 bg-[#f7f7f7] rounded-md p-2.5 border border-[#e8e8e8]">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <p className="text-[11px] font-medium text-[#1a1a1a]">Emissions trend</p>
-            <div className="flex items-center gap-2 text-[9px] text-[#666]">
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#4C7060]" />
+      <div className="mb-8 grid gap-6 lg:grid-cols-3">
+        <div className="rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-5 lg:col-span-2">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm font-medium text-[#1a1a1a]">Carbon Emissions Trend</p>
+            <div className="flex items-center gap-4 text-xs text-[#666]">
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-[#4C7060]" />
                 This month
               </span>
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#ccc]" />
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-[#d4d4d4]" />
                 Last month
               </span>
             </div>
           </div>
-          <div className="h-[4.5rem] flex items-end gap-1.5">
+          <div className="flex h-32 items-end gap-2">
             {[
-              { current: 72, previous: 78 },
               { current: 65, previous: 70 },
+              { current: 72, previous: 75 },
+              { current: 58, previous: 68 },
               { current: 80, previous: 85 },
-              { current: 58, previous: 68 }
-            ].map((data, i) => (
-              <div key={i} className="flex-1 flex gap-0.5 min-w-0">
-                <div
-                  className="flex-1 bg-[#ccc] rounded-t-sm"
-                  style={{ height: `${data.previous}%` }}
-                />
-                <div
-                  className="flex-1 bg-[#4C7060] rounded-t-sm"
-                  style={{ height: `${data.current}%` }}
-                />
+              { current: 75, previous: 90 },
+              { current: 68, previous: 78 },
+              { current: 82, previous: 88 },
+              { current: 70, previous: 82 },
+              { current: 65, previous: 75 },
+              { current: 78, previous: 85 },
+              { current: 72, previous: 80 },
+              { current: 68, previous: 76 }
+            ].map((data, index) => (
+              <div key={index} className="flex flex-1 gap-0.5">
+                <div className="flex-1 rounded-t-sm bg-[#d4d4d4]" style={{ height: `${data.previous}%` }} />
+                <div className="flex-1 rounded-t-sm bg-[#4C7060]" style={{ height: `${data.current}%` }} />
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-1.5 text-[9px] text-[#888]">
-            <span>W1</span>
-            <span>W2</span>
-            <span>W3</span>
-            <span>W4</span>
+          <div className="mt-2 flex justify-between text-xs text-[#888]">
+            <span>Week 1</span>
+            <span>Week 2</span>
+            <span>Week 3</span>
+            <span>Week 4</span>
           </div>
         </div>
 
-        <div className="sm:col-span-2 bg-[#f7f7f7] rounded-md p-2.5 border border-[#e8e8e8]">
-          <p className="text-[11px] font-medium mb-2 text-[#1a1a1a]">By provider (CO₂e)</p>
-          <div className="space-y-1.5">
+        <div className="rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-5">
+          <p className="mb-4 text-sm font-medium text-[#1a1a1a]">By Provider</p>
+          <div className="space-y-4">
             {[
               { name: 'Azure OpenAI', percentage: 45, value: '381 kg' },
               { name: 'OpenAI API', percentage: 30, value: '254 kg' },
               { name: 'M365 Copilot', percentage: 18, value: '152 kg' },
               { name: 'Other', percentage: 7, value: '60 kg' }
-            ].map((provider, i) => (
-              <div key={i}>
-                <div className="flex items-center justify-between text-[10px] mb-0.5 gap-1">
-                  <span className="text-[#333] truncate">{provider.name}</span>
-                  <span className="text-[#666] tabular-nums shrink-0">{provider.value}</span>
+            ].map(provider => (
+              <div key={provider.name}>
+                <div className="mb-1.5 flex items-center justify-between text-sm">
+                  <span className="text-[#333]">{provider.name}</span>
+                  <span className="text-[#666]">{provider.value}</span>
                 </div>
-                <div className="w-full h-1 bg-[#e5e5e5] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#4C7060] rounded-full"
-                    style={{ width: `${provider.percentage}%` }}
-                  />
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#e5e5e5]">
+                  <div className="h-full rounded-full bg-[#4C7060]" style={{ width: `${provider.percentage}%` }} />
                 </div>
               </div>
             ))}
@@ -164,46 +165,47 @@ const ExecutiveReport = () => {
         </div>
       </div>
 
-      {/* Actions — one compact row */}
-      <div className="bg-[#f7f7f7] rounded-md p-2.5 border border-[#e8e8e8]">
-        <div className="flex items-center gap-1.5 mb-2">
-          <CheckCircle2 className="w-3 h-3 text-[#4C7060]" strokeWidth={1.5} />
-          <p className="text-[11px] font-medium text-[#1a1a1a]">Suggested next steps</p>
+      <div className="rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 text-[#4C7060]" strokeWidth={1.5} />
+          <p className="text-sm font-medium text-[#1a1a1a]">Recommended Actions</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+        <div className="grid gap-4 md:grid-cols-3">
           {[
             {
               priority: 'High',
               action: 'Consolidate Azure regions',
-              impact: '~18% lower emissions',
-              savings: '~$1.2K/yr'
+              impact: 'Reduce carbon footprint by 18%',
+              savings: '$12K/year'
             },
             {
               priority: 'Medium',
-              action: 'Right-size Copilot seats',
-              impact: '~22% unused capacity',
-              savings: '~$3K/yr'
+              action: 'Right-size Copilot licenses',
+              impact: 'Recover 33% unused capacity',
+              savings: '$36K/year'
             },
             {
               priority: 'Low',
-              action: 'Move batch jobs off-peak',
-              impact: '~15% less water use',
-              savings: 'Sustainability'
+              action: 'Shift batch jobs to off-peak',
+              impact: 'Lower water usage by 15%',
+              savings: 'Environmental'
             }
-          ].map((rec, i) => (
-            <div key={i} className="bg-white rounded border border-[#e8e8e8] p-2">
-              <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium inline-block mb-1 ${
-                rec.priority === 'High' ? 'bg-[#e8f5e9] text-[#2d6a4f]' :
-                rec.priority === 'Medium' ? 'bg-amber-50 text-amber-800' :
-                'bg-sky-50 text-sky-800'
-              }`}>
+          ].map(rec => (
+            <div key={rec.action} className="rounded-lg border border-[#e5e5e5] bg-white p-4">
+              <span
+                className={`mb-2 inline-block rounded px-2 py-0.5 text-xs ${
+                  rec.priority === 'High'
+                    ? 'bg-[#f0f5f3] text-[#4C7060]'
+                    : rec.priority === 'Medium'
+                      ? 'bg-amber-50 text-amber-600'
+                      : 'bg-[#f5f5f5] text-[#666]'
+                }`}
+              >
                 {rec.priority}
               </span>
-              <p className="text-[10px] font-medium text-[#1a1a1a] leading-tight mb-0.5">{rec.action}</p>
-              <p className="text-[9px] text-[#666] leading-tight">{rec.impact}</p>
-              <p className={`text-[9px] font-medium mt-0.5 ${
-                rec.savings === 'Sustainability' ? 'text-sky-800' : 'text-[#4C7060]'
-              }`}>{rec.savings}</p>
+              <p className="mb-1 text-sm font-medium text-[#1a1a1a]">{rec.action}</p>
+              <p className="mb-2 text-xs text-[#666]">{rec.impact}</p>
+              <p className="text-xs text-[#4C7060]">{rec.savings}</p>
             </div>
           ))}
         </div>

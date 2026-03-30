@@ -1,79 +1,528 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
+  AlertTriangle,
   ArrowRight,
   BarChart3,
-  Droplets,
-  Zap,
-  AlertTriangle,
-  CheckCircle2,
-  Link2,
-  Database,
   Calculator,
-  FileText,
+  CheckCircle2,
   ChevronRight,
+  Database,
+  Droplets,
+  FileText,
+  Link2,
   Menu,
-  X
+  X,
+  Zap
 } from 'lucide-react';
 import ExecutiveReport from '@/components/landing/ExecutiveReport';
 
+const problemHighlights = [
+  'No carbon data.',
+  'No water metrics.',
+  'No license utilization insights.'
+];
+
+const solutionTabs = [
+  { id: 0, label: 'Carbon & Water' },
+  { id: 1, label: 'License Utilization' },
+  { id: 2, label: 'Executive Report' }
+];
+
+const carbonTrend = [
+  { current: 65, previous: 70 },
+  { current: 72, previous: 75 },
+  { current: 58, previous: 68 },
+  { current: 80, previous: 85 },
+  { current: 75, previous: 90 },
+  { current: 68, previous: 78 },
+  { current: 82, previous: 88 },
+  { current: 70, previous: 82 }
+];
+
+const providerBreakdown = [
+  { name: 'Azure OpenAI', percentage: 45, value: '381 kg CO2e' },
+  { name: 'OpenAI API', percentage: 30, value: '254 kg CO2e' },
+  { name: 'M365 Copilot', percentage: 18, value: '152 kg CO2e' },
+  { name: 'Other', percentage: 7, value: '60 kg CO2e' }
+];
+
+const utilizationByTeam = [
+  { team: 'Product', utilization: 81 },
+  { team: 'Operations', utilization: 74 },
+  { team: 'Support', utilization: 58 },
+  { team: 'Finance', utilization: 42 }
+];
+
+const renewalRisks = [
+  { label: 'Azure OpenAI', value: '47 days', tone: 'amber' },
+  { label: 'Microsoft 365 Copilot', value: '124 days', tone: 'green' }
+] as const;
+
+const recommendedActions = [
+  'Consolidate Azure regions to reduce carbon by 18%',
+  'Right-size Copilot licenses for Finance team',
+  'Move batch jobs to off-peak processing windows'
+];
+
+const workflowSteps = [
+  {
+    step: '1',
+    icon: <Link2 className="h-5 w-5" strokeWidth={1.5} />,
+    title: 'Connect providers',
+    description: 'Link your AI infrastructure across OpenAI, Azure, Microsoft 365, and more.'
+  },
+  {
+    step: '2',
+    icon: <Database className="h-5 w-5" strokeWidth={1.5} />,
+    title: 'Aggregate usage',
+    description: 'Collect usage, licensing, and reporting telemetry into one decision layer.'
+  },
+  {
+    step: '3',
+    icon: <Calculator className="h-5 w-5" strokeWidth={1.5} />,
+    title: 'Model impact',
+    description: 'Translate infrastructure activity into carbon, water, and renewal risk signals.'
+  },
+  {
+    step: '4',
+    icon: <FileText className="h-5 w-5" strokeWidth={1.5} />,
+    title: 'Brief leadership',
+    description: 'Deliver an executive-ready monthly report with actions and cost exposure.'
+  }
+];
+
+const RadarVisual = memo(function RadarVisual() {
+  return (
+    <div className="relative mx-auto flex max-w-[30rem] justify-center">
+      <svg
+        viewBox="0 0 300 300"
+        className="h-[18rem] w-[18rem] sm:h-[22rem] sm:w-[22rem] lg:h-[24rem] lg:w-[24rem]"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id="sweepGradient" x1="150" y1="150" x2="274" y2="78" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#86efac" stopOpacity="0" />
+            <stop offset="70%" stopColor="#86efac" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#86efac" stopOpacity="0.45" />
+          </linearGradient>
+        </defs>
+
+        <line x1="5" y1="150" x2="295" y2="150" stroke="#236b42" strokeOpacity="0.15" strokeWidth="0.5" />
+        <line x1="150" y1="5" x2="150" y2="295" stroke="#236b42" strokeOpacity="0.15" strokeWidth="0.5" />
+        <line x1="47" y1="47" x2="253" y2="253" stroke="#236b42" strokeOpacity="0.08" strokeWidth="0.5" />
+        <line x1="253" y1="47" x2="47" y2="253" stroke="#236b42" strokeOpacity="0.08" strokeWidth="0.5" />
+
+        {[36, 72, 108, 144].map(radius => (
+          <circle
+            key={radius}
+            cx="150"
+            cy="150"
+            r={radius}
+            fill="none"
+            stroke="#236b42"
+            strokeOpacity="0.15"
+            strokeWidth="0.5"
+          />
+        ))}
+        <circle cx="150" cy="150" r="145" fill="none" stroke="#236b42" strokeOpacity="0.25" strokeWidth="1" />
+
+        <g>
+          <animateTransform
+            attributeName="transform"
+            type="rotate"
+            from="0 150 150"
+            to="360 150 150"
+            dur="8s"
+            repeatCount="indefinite"
+          />
+          <path d="M150,150 L150,6 A144,144 0 0,1 274.6,78 Z" fill="url(#sweepGradient)" />
+          <line x1="150" y1="150" x2="150" y2="6" stroke="#86efac" strokeOpacity="0.2" strokeWidth="1" />
+        </g>
+
+        <g>
+          <animate
+            attributeName="opacity"
+            values="0;0;1;0;0"
+            keyTimes="0;0.13;0.14;0.49;1"
+            dur="8s"
+            repeatCount="indefinite"
+          />
+          <circle cx="208" cy="98" r="4" fill="#ef4444" />
+          <text x="202" y="90" fill="#ef4444" fontSize="8" fontFamily="monospace" textAnchor="end">
+            DATA_ERROR: NULL
+          </text>
+        </g>
+
+        <g>
+          <animate
+            attributeName="opacity"
+            values="0;0;1;0;0"
+            keyTimes="0;0.636;0.646;0.986;1"
+            dur="8s"
+            repeatCount="indefinite"
+          />
+          <circle cx="92" cy="198" r="3" fill="#60a5fa" />
+          <text x="98" y="194" fill="#60a5fa" fontSize="8" fontFamily="monospace" textAnchor="start">
+            WATER_INDEX: NA
+          </text>
+        </g>
+
+        <g>
+          <animate
+            attributeName="opacity"
+            values="0;0;1;0;0"
+            keyTimes="0;0.362;0.372;0.722;1"
+            dur="8s"
+            repeatCount="indefinite"
+          />
+          <circle cx="215" cy="205" r="4" fill="#f59e0b" />
+          <text x="209" y="216" fill="#f59e0b" fontSize="8" fontFamily="monospace" textAnchor="end">
+            CARBON: UNKNOWN
+          </text>
+        </g>
+
+        <g>
+          <animate
+            attributeName="opacity"
+            values="0.45;0;0;1;0.45"
+            keyTimes="0;0.22;0.864;0.874;1"
+            dur="8s"
+            repeatCount="indefinite"
+          />
+          <circle cx="75" cy="85" r="3" fill="#ef4444" />
+          <text x="81" y="82" fill="#ef4444" fontSize="8" fontFamily="monospace">
+            ESG: NO_DATA
+          </text>
+        </g>
+      </svg>
+
+      <div className="absolute bottom-2 left-1/2 w-[15.5rem] -translate-x-1/2 rounded-2xl border border-[#e5e5e5] bg-white p-4 shadow-lg sm:bottom-[14%] sm:left-[4%] sm:w-72 sm:translate-x-0">
+        <div className="mb-3 flex items-center gap-3">
+          <span className="text-xs tracking-[0.3em] text-[#888]">SYSTEM_STATUS</span>
+          <span className="h-2 w-2 rounded-full bg-red-400 animate-pulse" />
+        </div>
+        <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-[#f0f0f0]">
+          <div className="h-full rounded-full bg-red-400" style={{ width: '15%' }} />
+        </div>
+        <p className="text-xs">
+          <span className="text-[#888]">Visibility Index: </span>
+          <span className="font-semibold text-red-500">CRITICAL</span>
+        </p>
+      </div>
+    </div>
+  );
+});
+
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [solutionTab, setSolutionTab] = useState(0);
+  const [navSolid, setNavSolid] = useState(false);
+  const [problemProgress, setProblemProgress] = useState(0);
+  const [inProblemSection, setInProblemSection] = useState(false);
+  const problemWrapperRef = useRef<HTMLDivElement>(null);
+  const currentYear = new Date().getFullYear();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setNavSolid(window.scrollY > window.innerHeight * 0.8);
+
+      if (!problemWrapperRef.current) {
+        return;
+      }
+
+      const rect = problemWrapperRef.current.getBoundingClientRect();
+      setInProblemSection(rect.top <= 0 && rect.bottom > 0);
+
+      const progress = Math.min(1, Math.max(0, -rect.top / (2 * window.innerHeight)));
+      setProblemProgress(progress);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const fullText = 'Leadership teams are making AI investment decisions in the dark.';
+  const beforeDark = 'Leadership teams are making AI investment decisions in the ';
+  const typeProgress = Math.min(1, problemProgress / 0.4);
+  const charCount = Math.floor(typeProgress * fullText.length);
+  const textBeforeDark = beforeDark.slice(0, Math.min(charCount, beforeDark.length));
+  const darkCharsShown = Math.max(0, charCount - beforeDark.length);
+  const darkText = 'dark'.slice(0, Math.min(darkCharsShown, 4));
+  const dotVisible = charCount >= fullText.length - 1;
+  const overlayDark = darkCharsShown > 0;
+  const overlayOpacity = problemProgress < 0.65 ? 1 : problemProgress > 0.85 ? 0 : 1 - (problemProgress - 0.65) / 0.2;
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
+  const solutionPreview = (() => {
+    if (solutionTab === 0) {
+      return (
+        <div key="carbon-water" className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] fade-in-up">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-[1.5rem] border border-[#dbe7df] bg-white p-6 shadow-sm sm:col-span-2">
+              <div className="mb-5 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.2em] text-[#5a7768]">Carbon Footprint</p>
+                  <p className="mt-2 text-sm text-[#63756a]">Enterprise AI emissions across this reporting window.</p>
+                </div>
+                <div className="rounded-2xl bg-[#e8f5ee] p-3 text-[#236b42]">
+                  <BarChart3 className="h-6 w-6" strokeWidth={1.5} />
+                </div>
+              </div>
+              <div className="mb-6 flex flex-wrap items-end gap-3">
+                <span className="text-5xl font-medium text-[#1a1a1a]">847</span>
+                <span className="pb-1 text-lg text-[#63756a]">kg CO2e</span>
+                <span className="pb-1 text-sm font-medium text-[#236b42]">12% lower than last month</span>
+              </div>
+              <div className="flex h-28 items-end gap-2">
+                {carbonTrend.map((entry, index) => (
+                  <div key={index} className="flex min-w-0 flex-1 gap-1">
+                    <div className="flex-1 rounded-t-sm bg-[#d4d4d4]" style={{ height: `${entry.previous}%` }} />
+                    <div className="flex-1 rounded-t-sm bg-[#236b42]" style={{ height: `${entry.current}%` }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-[1.5rem] border border-[#dbe7df] bg-white p-6 shadow-sm">
+              <div className="mb-5 flex items-center justify-between">
+                <p className="text-sm uppercase tracking-[0.2em] text-[#5a7768]">Water Usage</p>
+                <Droplets className="h-5 w-5 text-[#236b42]" strokeWidth={1.5} />
+              </div>
+              <div className="mb-3">
+                <span className="text-4xl font-medium text-[#1a1a1a]">12.4K</span>
+                <span className="ml-2 text-sm text-[#63756a]">liters</span>
+              </div>
+              <p className="text-sm leading-relaxed text-[#63756a]">
+                Cooling and infrastructure water intensity translated directly from workload activity.
+              </p>
+            </div>
+
+            <div className="rounded-[1.5rem] border border-[#dbe7df] bg-white p-6 shadow-sm">
+              <div className="mb-5 flex items-center justify-between">
+                <p className="text-sm uppercase tracking-[0.2em] text-[#5a7768]">Coverage</p>
+                <CheckCircle2 className="h-5 w-5 text-[#236b42]" strokeWidth={1.5} />
+              </div>
+              <div className="mb-3">
+                <span className="text-4xl font-medium text-[#1a1a1a]">94%</span>
+              </div>
+              <p className="text-sm leading-relaxed text-[#63756a]">
+                Provider and regional usage captured before monthly briefing generation.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-[1.75rem] border border-[#dbe7df] bg-[#f7fbf8] p-6 shadow-sm">
+            <p className="text-sm uppercase tracking-[0.2em] text-[#5a7768]">Provider Breakdown</p>
+            <h3 className="mt-3 text-2xl font-medium tracking-tight text-[#1a1a1a]">
+              See emissions and water impact by platform, not just in aggregate.
+            </h3>
+            <div className="mt-8 space-y-5">
+              {providerBreakdown.map(provider => (
+                <div key={provider.name}>
+                  <div className="mb-2 flex items-center justify-between gap-4 text-sm">
+                    <span className="text-[#1a1a1a]">{provider.name}</span>
+                    <span className="text-[#63756a]">{provider.value}</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-[#dbe7df]">
+                    <div className="h-full rounded-full bg-[#236b42]" style={{ width: `${provider.percentage}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 rounded-2xl border border-[#dbe7df] bg-white p-5">
+              <p className="text-sm text-[#63756a]">
+                GreenLens translates raw usage from each provider into leadership-ready carbon, water, and trend reporting.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (solutionTab === 1) {
+      return (
+        <div key="license" className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] fade-in-up">
+          <div className="rounded-[1.75rem] border border-[#dbe7df] bg-white p-6 shadow-sm">
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm uppercase tracking-[0.2em] text-[#5a7768]">License Utilization</p>
+                <h3 className="mt-3 text-2xl font-medium tracking-tight text-[#1a1a1a]">
+                  Surface overspend before renewals lock in waste.
+                </h3>
+              </div>
+              <div className="rounded-2xl bg-[#e8f5ee] p-3 text-[#236b42]">
+                <Zap className="h-6 w-6" strokeWidth={1.5} />
+              </div>
+            </div>
+
+            <div className="mb-6 rounded-[1.5rem] bg-[#123826] p-6 text-white">
+              <p className="text-sm uppercase tracking-[0.2em] text-white/60">Active Licenses</p>
+              <div className="mt-4 flex items-end gap-3">
+                <span className="text-5xl font-medium">67%</span>
+                <span className="pb-1 text-base text-white/70">in use</span>
+              </div>
+              <p className="mt-3 text-sm text-white/70">33% of paid capacity is currently idle across enterprise AI seats.</p>
+            </div>
+
+            <div className="space-y-4">
+              {utilizationByTeam.map(team => (
+                <div key={team.team}>
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="text-[#1a1a1a]">{team.team}</span>
+                    <span className="text-[#63756a]">{team.utilization}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-[#e5ece7]">
+                    <div className="h-full rounded-full bg-[#236b42]" style={{ width: `${team.utilization}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            <div className="rounded-[1.75rem] border border-[#dbe7df] bg-[#f7fbf8] p-6 shadow-sm">
+              <div className="mb-5 flex items-center justify-between">
+                <p className="text-sm uppercase tracking-[0.2em] text-[#5a7768]">Renewal Risk</p>
+                <AlertTriangle className="h-5 w-5 text-amber-600" strokeWidth={1.5} />
+              </div>
+              <div className="space-y-4">
+                {renewalRisks.map(risk => (
+                  <div key={risk.label} className="flex items-center justify-between gap-4 rounded-2xl border border-[#dbe7df] bg-white px-4 py-3">
+                    <span className="text-sm text-[#1a1a1a]">{risk.label}</span>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        risk.tone === 'amber'
+                          ? 'bg-amber-50 text-amber-700'
+                          : 'bg-[#e8f5ee] text-[#236b42]'
+                      }`}
+                    >
+                      {risk.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-[1.75rem] border border-[#dbe7df] bg-white p-6 shadow-sm">
+              <div className="mb-5 flex items-center justify-between">
+                <p className="text-sm uppercase tracking-[0.2em] text-[#5a7768]">Recommended Actions</p>
+                <CheckCircle2 className="h-5 w-5 text-[#236b42]" strokeWidth={1.5} />
+              </div>
+              <div className="space-y-3">
+                {recommendedActions.map(action => (
+                  <div key={action} className="flex items-start gap-3 rounded-2xl bg-[#f7fbf8] px-4 py-3">
+                    <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-[#236b42]" strokeWidth={1.5} />
+                    <span className="text-sm text-[#1a1a1a]">{action}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div key="executive-report" className="fade-in-up">
+        <div className="overflow-hidden rounded-[1.75rem] border border-[#dbe7df] bg-white p-3 shadow-sm sm:p-5">
+          <div className="mb-4 flex flex-col gap-2 px-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.2em] text-[#5a7768]">Executive Report</p>
+              <h3 className="mt-2 text-2xl font-medium tracking-tight text-[#1a1a1a]">
+                Deliver a board-ready monthly briefing from the same operating data.
+              </h3>
+            </div>
+            <div className="text-sm text-[#63756a]">Leadership summary, footprint, utilization, and actions.</div>
+          </div>
+          <ExecutiveReport />
+        </div>
+      </div>
+    );
+  })();
 
   return (
     <div className="min-h-screen bg-white text-[#1a1a1a]">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-header">
-        <div className="flex items-center justify-between h-16 px-6 lg:px-10">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-[#4C7060] flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-white" strokeWidth={1.5} />
-            </div>
-            <span className="font-medium text-lg tracking-tight text-white">GreenLens AI</span>
-          </Link>
+      <nav
+        className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
+          navSolid ? 'border-b border-white/10 bg-[#123826]/95 backdrop-blur' : 'glass-header'
+        }`}
+        style={{
+          opacity: inProblemSection ? 1 - overlayOpacity : 1,
+          pointerEvents: inProblemSection && overlayOpacity > 0.05 ? 'none' : 'auto'
+        }}
+      >
+        <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-6 sm:px-8 lg:px-10">
+          <div className="flex items-center gap-10">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#236b42]">
+                <BarChart3 className="h-5 w-5 text-white" strokeWidth={1.5} />
+              </div>
+              <span className="text-lg font-medium tracking-tight text-white">GreenLens AI</span>
+            </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#problem" className="text-sm text-white/75 hover:text-white transition-colors">Problem</a>
-            <a href="#solution" className="text-sm text-white/75 hover:text-white transition-colors">Solution</a>
-            <a href="#product" className="text-sm text-white/75 hover:text-white transition-colors">Product</a>
-            <a href="#how-it-works" className="text-sm text-white/75 hover:text-white transition-colors">How it works</a>
+            <div className="hidden items-center gap-8 md:flex">
+              <a href="#problem" className="text-sm font-medium text-white/80 transition-colors hover:text-white">
+                Problem
+              </a>
+              <a href="#solution" className="text-sm font-medium text-white/80 transition-colors hover:text-white">
+                Solution
+              </a>
+              <a href="#product" className="text-sm font-medium text-white/80 transition-colors hover:text-white">
+                Product
+              </a>
+              <a href="#how-it-works" className="text-sm font-medium text-white/80 transition-colors hover:text-white">
+                How it works
+              </a>
+            </div>
           </div>
 
-          {/* CTA */}
-          <div className="hidden md:flex items-center gap-4">
-            <Link href="/login" className="text-sm text-white/75 hover:text-white transition-colors px-3 py-2">
-              Login
+          <div className="hidden items-center gap-4 md:flex">
+            <Link href="/login" className="px-3 py-2 text-sm font-medium text-white/80 transition-colors hover:text-white">
+              Log in
             </Link>
-            <Link href="/login" className="btn-primary text-sm px-4 py-2 rounded-md font-medium">
+            <Link href="/login" className="btn-primary rounded-md px-4 py-2 text-sm font-medium">
               Get a sample report
             </Link>
           </div>
 
-          {/* Mobile menu button */}
           <button
-            className="md:hidden p-2 text-white"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 text-white md:hidden"
+            onClick={() => setMobileMenuOpen(open => !open)}
+            aria-expanded={mobileMenuOpen}
+            aria-label="Toggle navigation"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
 
-        {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-black/60 border-t border-white/10 backdrop-blur-md">
-            <div className="container-custom py-4 flex flex-col gap-3">
-              <a href="#problem" className="text-sm text-white/75 hover:text-white py-1">Problem</a>
-              <a href="#solution" className="text-sm text-white/75 hover:text-white py-1">Solution</a>
-              <a href="#product" className="text-sm text-white/75 hover:text-white py-1">Product</a>
-              <a href="#how-it-works" className="text-sm text-white/75 hover:text-white py-1">How it works</a>
-              <Link href="/login" className="text-sm text-white/75 hover:text-white py-1">
-                Login
+          <div className="border-t border-white/10 bg-[#0d2217]/95 backdrop-blur md:hidden">
+            <div className="container-custom flex flex-col gap-3 py-4">
+              <a href="#problem" className="py-1 text-sm text-white/75 hover:text-white" onClick={closeMobileMenu}>
+                Problem
+              </a>
+              <a href="#solution" className="py-1 text-sm text-white/75 hover:text-white" onClick={closeMobileMenu}>
+                Solution
+              </a>
+              <a href="#product" className="py-1 text-sm text-white/75 hover:text-white" onClick={closeMobileMenu}>
+                Product
+              </a>
+              <a href="#how-it-works" className="py-1 text-sm text-white/75 hover:text-white" onClick={closeMobileMenu}>
+                How it works
+              </a>
+              <Link href="/login" className="py-1 text-sm text-white/75 hover:text-white" onClick={closeMobileMenu}>
+                Log in
               </Link>
-              <Link href="/login" className="btn-primary text-sm px-4 py-2 rounded-md font-medium text-center">
+              <Link
+                href="/login"
+                className="btn-primary rounded-md px-4 py-2 text-center text-sm font-medium"
+                onClick={closeMobileMenu}
+              >
                 Get a sample report
               </Link>
             </div>
@@ -81,381 +530,274 @@ export default function Home() {
         )}
       </nav>
 
-      {/* Hero Section — vertically centered in viewport below fixed nav */}
-      <section className="relative hero-nature-bg overflow-hidden min-h-[100dvh] flex flex-col">
-        <div className="flex-1 flex flex-col lg:flex-row lg:items-center justify-center gap-8 lg:gap-10 xl:gap-14 w-full max-w-[1280px] mx-auto px-6 sm:px-8 lg:px-10 pt-24 pb-14 lg:py-8">
-          {/* Left: Text */}
-          <div className="w-full lg:w-[min(42%,26rem)] shrink-0 text-center lg:text-left max-w-lg mx-auto lg:mx-0">
-            <h1 className="text-[2rem] sm:text-[2.125rem] lg:text-[2.25rem] xl:text-[2.5rem] font-medium tracking-tight leading-snug mb-6 text-white text-balance">
+      <section className="hero-nature-bg relative overflow-hidden">
+        <div className="mx-auto flex min-h-screen max-w-[1400px] flex-col justify-center gap-12 px-6 pb-16 pt-28 sm:px-8 lg:flex-row lg:items-center lg:gap-10 lg:px-10 lg:pb-12">
+          <div className="w-full text-center lg:w-[44%] lg:text-left">
+            <p className="fade-in-up mb-6 text-sm uppercase tracking-[0.3em] text-white/70">AI Sustainability Intelligence</p>
+            <h1 className="fade-in-up text-balance text-5xl font-medium tracking-tight text-white sm:text-6xl lg:text-[5.25rem] lg:leading-[1.02]">
               Measure the environmental cost of your enterprise AI
             </h1>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-start justify-center lg:justify-start gap-2 sm:gap-3">
+            <p className="fade-in-up animation-delay-100 mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70 lg:mx-0 lg:text-xl">
+              Give leadership a single system for carbon, water, license efficiency, and renewal risk across every AI provider.
+            </p>
+
+            <div className="fade-in-up animation-delay-200 mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
               <Link
                 href="/login"
-                className="btn-primary text-sm px-4 py-2 rounded-md font-medium w-full sm:w-auto flex items-center justify-center gap-1.5"
+                className="btn-primary flex w-full items-center justify-center gap-2 rounded-md px-6 py-3 text-base font-medium sm:w-auto"
               >
                 Get a sample report
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="h-4 w-4" />
               </Link>
               <a
-                href="#how-it-works"
-                className="btn-secondary-dark text-sm px-4 py-2 rounded-md font-medium w-full sm:w-auto text-center"
+                href="#solution"
+                className="btn-secondary-dark w-full rounded-md px-6 py-3 text-center text-base font-medium sm:w-auto"
               >
-                See how it works
+                Explore the platform
               </a>
             </div>
           </div>
 
-          {/* Right: Dashboard mockup */}
-          <div className="flex-1 min-w-0 w-full flex justify-center lg:justify-end items-center">
-            <div className="dashboard-shadow rounded-xl overflow-hidden border border-white/15 bg-white/95 w-full max-w-xl lg:max-w-2xl xl:max-w-3xl">
+          <div className="fade-in-up animation-delay-300 w-full lg:flex-1 lg:pl-4">
+            <div className="dashboard-shadow mx-auto w-full max-w-4xl overflow-hidden rounded-[1.5rem] border border-white/12 bg-white/95">
               <ExecutiveReport />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Problem Section */}
-      <section id="problem" className="py-24 lg:py-32 bg-[#fafafa]">
-        <div className="container-custom">
-          <div className="max-w-3xl mb-16">
-            <p className="text-[#4C7060] text-sm font-medium tracking-wide uppercase mb-4">
-              The Problem
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-medium tracking-tight mb-6 text-[#1a1a1a]">
-              Enterprises are scaling AI without visibility into environmental impact
-            </h2>
-            <p className="text-[#555] text-lg">
-              Leadership teams are making AI investment decisions in the dark. No carbon data. No water metrics. No license utilization insights.
-            </p>
-          </div>
+      <div id="problem" ref={problemWrapperRef} style={{ height: '300vh' }}>
+        <section className="sticky top-0 h-screen overflow-hidden">
+          <div className="absolute inset-0 flex items-center bg-white">
+            <div className="mx-auto grid w-full max-w-[1400px] items-center gap-12 px-6 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-10">
+              <div className="text-center lg:text-left">
+                <p className="mb-6 text-sm uppercase tracking-[0.3em] text-[#236b42]">The Visibility Gap</p>
+                <h2 className="text-balance text-4xl font-medium tracking-tight text-[#1a1a1a] sm:text-5xl lg:text-6xl lg:leading-[1.08]">
+                  Leadership teams are making AI investment decisions in the dark.
+                </h2>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            {[
-              {
-                icon: <BarChart3 className="w-5 h-5" strokeWidth={1.5} />,
-                title: 'Rapid AI adoption with zero measurement',
-                description: 'Companies deploy AI across departments without tracking environmental footprint or resource consumption.'
-              },
-              {
-                icon: <Droplets className="w-5 h-5" strokeWidth={1.5} />,
-                title: 'No visibility into AI carbon and water usage',
-                description: 'Leadership has no dashboards showing the real environmental cost of their AI infrastructure.'
-              },
-              {
-                icon: <Zap className="w-5 h-5" strokeWidth={1.5} />,
-                title: 'Overpaying for underutilized AI licenses',
-                description: 'Flat enterprise licenses create hidden waste. Teams pay for capacity they don\'t use.'
-              },
-              {
-                icon: <AlertTriangle className="w-5 h-5" strokeWidth={1.5} />,
-                title: 'ESG and board reporting gaps',
-                description: 'Sustainability teams lack the data they need for AI governance and regulatory compliance.'
-              }
-            ].map((item, index) => (
-              <div
-                key={index}
-                className={`bg-white border border-[#e5e5e5] p-6 rounded-lg card-hover fade-in-up stagger-${index + 1}`}
-              >
-                <div className="w-10 h-10 rounded-lg bg-[#f0f5f3] flex items-center justify-center mb-4 text-[#4C7060]">
-                  {item.icon}
+                <div className="mt-6 space-y-3">
+                  {problemHighlights.map((highlight, index) => (
+                    <span key={highlight} className="highlight-cycle mx-auto block w-fit text-2xl font-medium sm:text-3xl lg:mx-0" style={{ animationDelay: `${index * 2}s` }}>
+                      {highlight}
+                    </span>
+                  ))}
                 </div>
-                <h3 className="text-lg font-medium mb-2 text-[#1a1a1a]">{item.title}</h3>
-                <p className="text-[#666] text-sm leading-relaxed">{item.description}</p>
+
+                <Link
+                  href="/login"
+                  className="mt-10 inline-flex items-center gap-2 rounded-md border border-[#236b42] px-6 py-3 text-sm font-medium text-[#236b42] transition-colors hover:bg-[#236b42] hover:text-white"
+                >
+                  Request a demo
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      <div className="section-divider" />
-
-      {/* Solution Section */}
-      <section id="solution" className="py-24 lg:py-32 bg-white flow-lines">
-        <div className="container-custom">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <p className="text-[#4C7060] text-sm font-medium tracking-wide uppercase mb-4">
-                The Solution
-              </p>
-              <h2 className="text-3xl sm:text-4xl font-medium tracking-tight mb-6 text-[#1a1a1a]">
-                One platform for AI sustainability intelligence
-              </h2>
-              <p className="text-[#555] text-lg mb-8">
-                GreenLens AI connects to your existing AI systems, aggregates usage data, and delivers executive-ready insights every month.
-              </p>
-
-              <div className="space-y-4">
-                {[
-                  'Connects to OpenAI, Azure, Microsoft 365, and more',
-                  'Pulls real usage data from AI providers',
-                  'Calculates carbon and water footprint automatically',
-                  'Analyzes license utilization and renewal timing',
-                  'Generates executive-ready recommendations'
-                ].map((item, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-[#4C7060] mt-0.5 flex-shrink-0" strokeWidth={1.5} />
-                    <span className="text-[#333]">{item}</span>
-                  </div>
-                ))}
+              <div className="flex justify-center">
+                <RadarVisual />
               </div>
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: 'Carbon Tracked', value: '2.4M', unit: 'kg CO₂e' },
-                { label: 'Water Measured', value: '890K', unit: 'liters' },
-                { label: 'License Savings', value: '$1.2M', unit: 'identified' },
-                { label: 'Reports Generated', value: '12K+', unit: 'monthly' }
-              ].map((stat, index) => (
-                <div
-                  key={index}
-                  className="bg-white border border-[#e5e5e5] p-6 rounded-lg card-hover metric-glow"
+          <div
+            className="absolute inset-0 z-10 flex items-center"
+            style={{
+              backgroundColor: overlayDark ? '#000' : '#fff',
+              opacity: overlayOpacity,
+              pointerEvents: overlayOpacity < 0.05 ? 'none' : 'auto',
+              transition: 'background-color 200ms ease'
+            }}
+          >
+            <div className="mx-auto w-full max-w-[1400px] px-6 sm:px-8 lg:px-10">
+              <div className="max-w-4xl text-center lg:text-left">
+                <p className="mb-6 invisible text-sm uppercase tracking-[0.3em]">The Visibility Gap</p>
+                <h2
+                  className="text-balance text-4xl font-medium tracking-tight sm:text-5xl lg:text-6xl lg:leading-[1.08]"
+                  style={{ color: overlayDark ? '#fff' : '#1a1a1a' }}
                 >
-                  <p className="text-[#666] text-xs uppercase tracking-wide mb-2">{stat.label}</p>
-                  <p className="text-3xl font-medium number-highlight">{stat.value}</p>
-                  <p className="text-[#666] text-sm">{stat.unit}</p>
-                </div>
+                  {textBeforeDark}
+                  {darkCharsShown > 0 && <strong className="font-semibold text-[#facc15]">{darkText}</strong>}
+                  {dotVisible && '.'}
+                  {problemHighlights.map(highlight => (
+                    <span key={highlight} className="highlight-cycle invisible block text-2xl sm:text-3xl">
+                      {highlight}
+                    </span>
+                  ))}
+                </h2>
+                <span className="mt-10 inline-flex px-6 py-3 text-sm font-medium invisible">Request a demo</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section id="solution" className="flow-lines bg-white py-24 lg:py-32">
+        <div className="container-custom">
+          <div className="mx-auto mb-10 max-w-5xl text-center">
+            <p className="mb-4 text-sm uppercase tracking-[0.3em] text-[#236b42]">The Solution</p>
+            <h2 className="text-balance text-4xl font-medium tracking-tight text-[#1a1a1a] sm:text-5xl lg:text-6xl">
+              One platform for AI sustainability intelligence
+            </h2>
+            <p className="mx-auto mt-6 max-w-4xl text-lg leading-relaxed text-[#5d6a62] sm:text-xl">
+              GreenLens AI connects to your existing AI systems, aggregates usage data, and delivers executive-ready insights every month.
+            </p>
+          </div>
+
+          <div className="mb-8 flex justify-center">
+            <div className="flex flex-wrap justify-center gap-2 rounded-full bg-[#f0f0f0] p-1">
+              {solutionTabs.map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setSolutionTab(tab.id)}
+                  className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${
+                    solutionTab === tab.id ? 'bg-white text-[#1a1a1a] shadow-sm' : 'text-[#666] hover:text-[#1a1a1a]'
+                  }`}
+                  aria-pressed={solutionTab === tab.id}
+                >
+                  {tab.label}
+                </button>
               ))}
             </div>
           </div>
+
+          {solutionPreview}
         </div>
       </section>
 
-      <div className="section-divider" />
-
-      {/* Product Walkthrough Section */}
-      <section id="product" className="py-24 lg:py-32 bg-[#fafafa]">
-        <div className="container-custom">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <p className="text-[#4C7060] text-sm font-medium tracking-wide uppercase mb-4">
-              Monthly AI Impact Briefing
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-medium tracking-tight mb-6 text-[#1a1a1a]">
-              Everything leadership needs in one report
-            </h2>
-            <p className="text-[#555] text-lg">
-              Each month, executives receive a comprehensive briefing covering environmental impact, license efficiency, and specific recommendations.
-            </p>
-          </div>
-
-          {/* Bento Grid */}
-          <div className="grid md:grid-cols-3 gap-4">
-            {/* Carbon Footprint - Large */}
-            <div className="bg-white border border-[#e5e5e5] p-6 rounded-lg md:col-span-2 card-hover">
-              <div className="flex items-center justify-between mb-6">
+      <section id="product" className="bg-[#123826] py-24 lg:py-32">
+        <div className="mx-auto grid max-w-[1400px] gap-12 px-6 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-10">
+          <div className="order-2 grid gap-4 sm:grid-cols-2 lg:order-1">
+            <div className="rounded-[1.5rem] border border-white/10 bg-white p-5 shadow-sm sm:col-span-2">
+              <div className="mb-8 flex items-center justify-between">
                 <div>
-                  <p className="text-[#666] text-xs uppercase tracking-wide mb-1">Carbon Footprint</p>
-                  <p className="text-sm text-[#888]">Total AI-related emissions this period</p>
+                  <p className="text-sm uppercase tracking-[0.2em] text-[#63756a]">Carbon Footprint</p>
+                  <p className="mt-2 text-base text-[#7b8a82]">Total AI-related emissions this period</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-[#f0f5f3] flex items-center justify-center text-[#4C7060]">
-                  <BarChart3 className="w-5 h-5" strokeWidth={1.5} />
+                <div className="rounded-2xl bg-[#e8f5ee] p-3 text-[#236b42]">
+                  <BarChart3 className="h-6 w-6" strokeWidth={1.5} />
                 </div>
               </div>
-              <div className="flex items-end gap-4 mb-4">
-                <span className="text-5xl font-medium number-highlight">847</span>
-                <span className="text-[#666] text-lg mb-1">kg CO₂e</span>
-                <span className="text-[#4C7060] text-sm mb-1.5 flex items-center gap-1">
-                  ↓ 12% vs last month
-                </span>
+              <div className="mb-6 flex flex-wrap items-end gap-3">
+                <span className="text-5xl font-medium text-[#236b42]">847</span>
+                <span className="pb-1 text-lg text-[#63756a]">kg CO2e</span>
+                <span className="pb-1 text-sm font-medium text-[#236b42]">12% vs last month</span>
               </div>
-              <div className="h-24 flex items-end gap-1">
-                {[40, 55, 35, 70, 60, 45, 80, 65, 50, 75, 55, 60].map((h, i) => (
-                  <div
-                    key={i}
-                    className="flex-1 bg-[#4C7060] rounded-t-sm opacity-70 hover:opacity-100 transition-opacity"
-                    style={{ height: `${h}%` }}
-                  />
+              <div className="flex h-20 items-end gap-1.5">
+                {[40, 55, 35, 70, 60, 45, 80, 65, 50, 75, 55, 60].map((height, index) => (
+                  <div key={index} className="flex-1 rounded-t-sm bg-[#236b42] opacity-75 transition-opacity hover:opacity-100" style={{ height: `${height}%` }} />
                 ))}
               </div>
             </div>
 
-            {/* Water Usage */}
-            <div className="bg-white border border-[#e5e5e5] p-6 rounded-lg card-hover">
-              <div className="flex items-center justify-between mb-6">
-                <p className="text-[#666] text-xs uppercase tracking-wide">Water Usage</p>
-                <div className="w-10 h-10 rounded-lg bg-[#f0f5f3] flex items-center justify-center text-[#4C7060]">
-                  <Droplets className="w-5 h-5" strokeWidth={1.5} />
+            <div className="rounded-[1.5rem] border border-white/10 bg-white p-5 shadow-sm">
+              <div className="mb-8 flex items-center justify-between">
+                <p className="text-sm uppercase tracking-[0.2em] text-[#63756a]">Water Usage</p>
+                <div className="rounded-2xl bg-[#e8f5ee] p-3 text-[#236b42]">
+                  <Droplets className="h-6 w-6" strokeWidth={1.5} />
                 </div>
               </div>
-              <div className="mb-2">
-                <span className="text-4xl font-medium number-highlight">12.4K</span>
-                <span className="text-[#666] text-sm ml-2">liters</span>
+              <div className="mb-3">
+                <span className="text-3xl font-medium text-[#236b42]">12.4K</span>
+                <span className="ml-2 text-base text-[#63756a]">liters</span>
               </div>
-              <p className="text-[#666] text-sm">Data center cooling consumption from AI workloads</p>
+              <p className="text-base text-[#63756a]">Data center cooling consumption from AI workloads.</p>
             </div>
 
-            {/* License Utilization */}
-            <div className="bg-white border border-[#e5e5e5] p-6 rounded-lg card-hover">
-              <div className="flex items-center justify-between mb-6">
-                <p className="text-[#666] text-xs uppercase tracking-wide">License Utilization</p>
-                <div className="w-10 h-10 rounded-lg bg-[#f0f5f3] flex items-center justify-center text-[#4C7060]">
-                  <Zap className="w-5 h-5" strokeWidth={1.5} />
+            <div className="rounded-[1.5rem] border border-white/10 bg-white p-5 shadow-sm">
+              <div className="mb-8 flex items-center justify-between">
+                <p className="text-sm uppercase tracking-[0.2em] text-[#63756a]">License Utilization</p>
+                <div className="rounded-2xl bg-[#e8f5ee] p-3 text-[#236b42]">
+                  <Zap className="h-6 w-6" strokeWidth={1.5} />
                 </div>
               </div>
-              <div className="mb-4">
-                <span className="text-4xl font-medium number-highlight">67%</span>
+              <div className="mb-5">
+                <span className="text-3xl font-medium text-[#236b42]">67%</span>
               </div>
-              <div className="w-full h-2 bg-[#e5e5e5] rounded-full overflow-hidden">
-                <div className="h-full bg-[#4C7060] rounded-full" style={{ width: '67%' }} />
+              <div className="h-3 w-full overflow-hidden rounded-full bg-[#e5e5e5]">
+                <div className="h-full rounded-full bg-[#236b42]" style={{ width: '67%' }} />
               </div>
-              <p className="text-[#666] text-sm mt-3">33% capacity unused across enterprise licenses</p>
+              <p className="mt-4 text-base text-[#63756a]">33% capacity unused across enterprise licenses.</p>
             </div>
 
-            {/* Renewal Risk */}
-            <div className="bg-white border border-[#e5e5e5] p-6 rounded-lg card-hover">
-              <div className="flex items-center justify-between mb-6">
-                <p className="text-[#666] text-xs uppercase tracking-wide">Renewal Risk</p>
-                <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
-                  <AlertTriangle className="w-5 h-5" strokeWidth={1.5} />
+            <div className="rounded-[1.5rem] border border-white/10 bg-white p-5 shadow-sm">
+              <div className="mb-8 flex items-center justify-between">
+                <p className="text-sm uppercase tracking-[0.2em] text-[#63756a]">Renewal Risk</p>
+                <div className="rounded-2xl bg-amber-50 p-3 text-amber-600">
+                  <AlertTriangle className="h-6 w-6" strokeWidth={1.5} />
+                </div>
+              </div>
+              <div className="space-y-4">
+                {renewalRisks.map(risk => (
+                  <div key={risk.label} className="flex items-center justify-between gap-3">
+                    <span className="text-base text-[#333]">{risk.label}</span>
+                    <span
+                      className={`rounded-full px-3 py-1 text-sm ${
+                        risk.tone === 'amber'
+                          ? 'bg-amber-50 text-amber-700'
+                          : 'bg-[#e8f5ee] text-[#236b42]'
+                      }`}
+                    >
+                      {risk.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-[1.5rem] border border-white/10 bg-white p-5 shadow-sm sm:col-span-2">
+              <div className="mb-8 flex items-center justify-between">
+                <p className="text-sm uppercase tracking-[0.2em] text-[#63756a]">Recommended Actions</p>
+                <div className="rounded-2xl bg-[#e8f5ee] p-3 text-[#236b42]">
+                  <CheckCircle2 className="h-6 w-6" strokeWidth={1.5} />
                 </div>
               </div>
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-[#333]">Azure OpenAI</span>
-                  <span className="text-xs px-2 py-0.5 bg-amber-50 text-amber-600 rounded">47 days</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-[#333]">Microsoft 365 Copilot</span>
-                  <span className="text-xs px-2 py-0.5 bg-[#f0f5f3] text-[#4C7060] rounded">124 days</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Recommended Actions */}
-            <div className="bg-white border border-[#e5e5e5] p-6 rounded-lg md:col-span-3 lg:col-span-1 card-hover">
-              <div className="flex items-center justify-between mb-6">
-                <p className="text-[#666] text-xs uppercase tracking-wide">Recommended Actions</p>
-                <div className="w-10 h-10 rounded-lg bg-[#f0f5f3] flex items-center justify-center text-[#4C7060]">
-                  <CheckCircle2 className="w-5 h-5" strokeWidth={1.5} />
-                </div>
-              </div>
-              <div className="space-y-3">
-                {[
-                  'Consolidate Azure regions to reduce carbon by 18%',
-                  'Right-size Copilot licenses for Finance team',
-                  'Migrate batch jobs to off-peak hours'
-                ].map((action, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 bg-[#fafafa] rounded-lg">
-                    <ChevronRight className="w-4 h-4 text-[#4C7060] mt-0.5 flex-shrink-0" strokeWidth={1.5} />
-                    <span className="text-sm text-[#333]">{action}</span>
+                {recommendedActions.map(action => (
+                  <div key={action} className="flex items-start gap-3 rounded-2xl bg-[#f7fbf8] px-4 py-4">
+                    <ChevronRight className="mt-0.5 h-5 w-5 shrink-0 text-[#236b42]" strokeWidth={1.5} />
+                    <span className="text-base text-[#333]">{action}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
+
+          <div className="order-1 text-center lg:order-2 lg:pl-8 lg:text-left">
+            <p className="mb-6 text-sm uppercase tracking-[0.3em] text-[#86efac]">Monthly AI Impact Briefing</p>
+            <h2 className="text-balance text-4xl font-medium tracking-tight text-white sm:text-5xl lg:text-6xl lg:leading-[1.05]">
+              Everything leadership needs in one report
+            </h2>
+            <p className="mt-6 text-lg leading-relaxed text-white/65 sm:text-xl">
+              Each month, executives receive a comprehensive briefing covering environmental impact, license efficiency, renewal exposure, and the actions worth taking next.
+            </p>
+          </div>
         </div>
       </section>
 
-      <div className="section-divider" />
-
-      {/* How It Works Section */}
-      <section id="how-it-works" className="py-24 lg:py-32 bg-white grid-texture">
+      <section id="how-it-works" className="grid-texture bg-white py-24 lg:py-32">
         <div className="container-custom">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <p className="text-[#4C7060] text-sm font-medium tracking-wide uppercase mb-4">
-              How It Works
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-medium tracking-tight mb-6 text-[#1a1a1a]">
+          <div className="mx-auto mb-16 max-w-4xl text-center">
+            <p className="mb-4 text-sm uppercase tracking-[0.3em] text-[#236b42]">How It Works</p>
+            <h2 className="text-balance text-4xl font-medium tracking-tight text-[#1a1a1a] sm:text-5xl lg:text-6xl">
               From connection to insight in four steps
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-6">
-            {[
-              {
-                step: '01',
-                icon: <Link2 className="w-6 h-6" strokeWidth={1.5} />,
-                title: 'Connect providers',
-                description: 'Link your AI infrastructure—OpenAI, Azure, Microsoft 365, and more.'
-              },
-              {
-                step: '02',
-                icon: <Database className="w-6 h-6" strokeWidth={1.5} />,
-                title: 'Aggregate data',
-                description: 'We pull usage metrics automatically from all connected services.'
-              },
-              {
-                step: '03',
-                icon: <Calculator className="w-6 h-6" strokeWidth={1.5} />,
-                title: 'Run calculations',
-                description: 'Carbon, water, and efficiency metrics computed using verified models.'
-              },
-              {
-                step: '04',
-                icon: <FileText className="w-6 h-6" strokeWidth={1.5} />,
-                title: 'Generate briefing',
-                description: 'Monthly executive report delivered with insights and recommendations.'
-              }
-            ].map((item, index) => (
-              <div key={index} className="relative">
-                <div className="bg-white border border-[#e5e5e5] p-6 rounded-lg h-full card-hover">
-                  <div className="flex items-center justify-between mb-6">
-                    <span className="text-[#4C7060] text-sm font-medium">{item.step}</span>
-                    <div className="w-12 h-12 rounded-lg bg-[#f0f5f3] flex items-center justify-center text-[#4C7060]">
-                      {item.icon}
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-medium mb-2 text-[#1a1a1a]">{item.title}</h3>
-                  <p className="text-[#666] text-sm leading-relaxed">{item.description}</p>
-                </div>
-                {/* Connector line */}
-                {index < 3 && (
-                  <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-[1px] bg-[#e5e5e5]" />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <div className="section-divider" />
-
-      {/* Differentiation Section */}
-      <section className="py-24 lg:py-32 bg-[#fafafa]">
-        <div className="container-custom">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <p className="text-[#4C7060] text-sm font-medium tracking-wide uppercase mb-4">
-              Why GreenLens AI
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-medium tracking-tight mb-6 text-[#1a1a1a]">
-              Built for leadership, not engineers
-            </h2>
-            <p className="text-[#555] text-lg">
-              Unlike dev tools and infrastructure monitors, GreenLens AI is designed for executives who need to make decisions—not debug systems.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            {[
-              {
-                title: 'Leadership-first design',
-                description: 'Every metric, chart, and recommendation is crafted for CIOs, CFOs, and sustainability teams—not technical operators.'
-              },
-              {
-                title: 'ESG and governance focus',
-                description: 'Purpose-built for sustainability reporting, board presentations, and regulatory compliance.'
-              },
-              {
-                title: 'Works with your stack',
-                description: 'Native integrations with OpenAI, Azure, Microsoft 365, and other enterprise AI tools you already use.'
-              },
-              {
-                title: 'From data to decisions',
-                description: 'Turns raw usage metrics into clear recommendations leadership can act on immediately.'
-              }
-            ].map((item, index) => (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {workflowSteps.map(step => (
               <div
-                key={index}
-                className="bg-white border border-[#e5e5e5] p-8 rounded-lg card-hover"
+                key={step.step}
+                className="flex aspect-[4/3] flex-col justify-between overflow-hidden rounded-[1.5rem] border-2 border-[#14472c] bg-white p-6"
               >
-                <div className="flex items-start gap-4">
-                  <div className="w-2 h-2 rounded-full bg-[#4C7060] mt-2 flex-shrink-0" />
-                  <div>
-                    <h3 className="text-lg font-medium mb-2 text-[#1a1a1a]">{item.title}</h3>
-                    <p className="text-[#666] text-sm leading-relaxed">{item.description}</p>
-                  </div>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="rounded-xl bg-[#e8f5ee] p-2.5 text-[#14472c]">{step.icon}</div>
+                  <span className="select-none text-6xl font-bold leading-none text-[#14472c]">{step.step}</span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium text-[#1a1a1a]">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[#63756a]">{step.description}</p>
                 </div>
               </div>
             ))}
@@ -463,55 +805,46 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="section-divider" />
+      <div
+        className="relative overflow-hidden"
+        style={{ backgroundImage: 'url(/cta-bg.jpg)', backgroundPosition: 'center', backgroundSize: 'cover' }}
+      >
+        <div className="absolute inset-0 bg-[#06110a]/70" />
 
-      {/* Final CTA Section */}
-      <section className="py-24 lg:py-32 bg-white">
-        <div className="container-custom">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight mb-6 text-[#1a1a1a]">
-              Get your first AI impact report
-            </h2>
-            <p className="text-[#555] text-lg mb-10 max-w-xl mx-auto">
-              See exactly how GreenLens AI transforms AI usage data into executive-ready sustainability intelligence.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="/login"
-                className="btn-primary text-base px-8 py-4 rounded-md font-medium w-full sm:w-auto flex items-center justify-center gap-2"
-              >
-                Request a sample report
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-            <p className="text-[#888] text-sm mt-6">
-              No commitment required. See a real executive briefing.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-[#e5e5e5] py-12 bg-[#fafafa]">
-        <div className="container-custom">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-md bg-[#4C7060] flex items-center justify-center">
-                <BarChart3 className="w-5 h-5 text-white" strokeWidth={1.5} />
+        <section className="relative py-24 lg:py-32">
+          <div className="container-custom relative z-10">
+            <div className="mx-auto max-w-4xl text-center">
+              <h2 className="text-balance text-4xl font-medium tracking-tight text-white sm:text-5xl lg:text-6xl">
+                Get your first AI impact report
+              </h2>
+              <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-white/70 sm:text-2xl">
+                See exactly how GreenLens AI transforms raw AI usage data into executive-ready sustainability intelligence.
+              </p>
+              <div className="mt-12 flex justify-center">
+                <Link
+                  href="/login"
+                  className="btn-primary flex w-full items-center justify-center gap-2 rounded-md px-8 py-4 text-base font-medium sm:w-auto sm:px-10 sm:py-5 sm:text-lg"
+                >
+                  Request a sample report
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
               </div>
-              <span className="font-medium text-lg tracking-tight text-[#1a1a1a]">GreenLens AI</span>
             </div>
-            <div className="flex items-center gap-8">
-              <a href="#" className="text-sm text-[#666] hover:text-[#1a1a1a] transition-colors">Privacy</a>
-              <a href="#" className="text-sm text-[#666] hover:text-[#1a1a1a] transition-colors">Terms</a>
-              <a href="#" className="text-sm text-[#666] hover:text-[#1a1a1a] transition-colors">Contact</a>
-            </div>
-            <p className="text-sm text-[#888]">
-              © 2025 GreenLens AI. All rights reserved.
-            </p>
           </div>
-        </div>
-      </footer>
+        </section>
+
+        <footer className="relative z-10 border-t border-white/10 px-6 py-10 sm:px-8 lg:px-10">
+          <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 sm:flex-row">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#236b42]">
+                <BarChart3 className="h-5 w-5 text-white" strokeWidth={1.5} />
+              </div>
+              <span className="text-lg font-medium tracking-tight text-white">GreenLens AI</span>
+            </div>
+            <p className="text-sm text-white/55">© {currentYear} GreenLens AI. All rights reserved.</p>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }

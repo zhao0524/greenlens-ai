@@ -76,6 +76,27 @@
   }
 }
 
+@keyframes text-highlight {
+  0% { background-size: 0% 100%; background-position: left center; }
+  15% { background-size: 100% 100%; background-position: left center; }
+  28% { background-size: 100% 100%; background-position: left center; }
+  44% { background-size: 0% 100%; background-position: left center; }
+  100% { background-size: 0% 100%; background-position: left center; }
+}
+
+.highlight-cycle {
+  display: block;
+  width: fit-content;
+  border-radius: 0.625rem;
+  background-image: linear-gradient(#fecaca, #fecaca);
+  background-position: left center;
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  padding: 0.125rem 0.5rem;
+  margin-inline: auto;
+  animation: text-highlight 6s infinite both;
+}
+
 /* Custom component classes */
 .grid-texture {
   background-image:
@@ -100,10 +121,8 @@
 }
 
 .glass-header {
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .card-hover {
@@ -119,7 +138,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: #4C7060;
+  background-color: #236b42;
   color: #ffffff;
   transition: background-color 150ms ease;
   cursor: pointer;
@@ -141,7 +160,7 @@
 }
 
 .btn-secondary:hover {
-  border-color: #4C7060;
+  border-color: #236b42;
   background-color: rgba(76, 112, 96, 0.05);
 }
 
@@ -197,7 +216,7 @@
 }
 
 .number-highlight {
-  color: #4C7060;
+  color: #236b42;
   font-family: var(--font-display);
   font-weight: 500;
 }
@@ -229,4 +248,15 @@
 .flow-lines {
   background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 Q 25 30, 50 50 T 100 50' fill='none' stroke='rgba(76,112,96,0.06)' stroke-width='0.5'/%3E%3Cpath d='M0 60 Q 25 40, 50 60 T 100 60' fill='none' stroke='rgba(76,112,96,0.04)' stroke-width='0.5'/%3E%3Cpath d='M0 70 Q 25 50, 50 70 T 100 70' fill='none' stroke='rgba(76,112,96,0.03)' stroke-width='0.5'/%3E%3C/svg%3E");
   background-size: 200px 100px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .fade-in-up,
+  .highlight-cycle {
+    animation: none !important;
+  }
 }

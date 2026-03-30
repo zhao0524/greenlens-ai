@@ -47,8 +47,8 @@ export async function GET(request: Request) {
 
     if (intent === 'login') {
       if (!hasCompany) {
-        // User tried to log in but has no account — send them to sign up
-        return NextResponse.redirect(`${origin}/login?error=no_account`)
+        // New user — send them through onboarding to create their company and connect integrations
+        return NextResponse.redirect(`${origin}/onboarding${providerParam}`)
       }
       return NextResponse.redirect(`${origin}/onboarding/connect?next=/dashboard`)
     }

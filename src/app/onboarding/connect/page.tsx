@@ -1,4 +1,5 @@
 'use client'
+export const dynamic = 'force-dynamic'
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -41,8 +42,18 @@ function ConnectPageInner() {
   const [openaiKey, setOpenaiKey] = useState('')
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [connecting, setConnecting] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  // Reset connecting state when user returns via browser back button (bfcache restore)
+  useEffect(() => {
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setConnecting(null)
+    }
+    window.addEventListener('pageshow', handlePageShow)
+    return () => window.removeEventListener('pageshow', handlePageShow)
+  }, [])
 
   // On mount: load existing integrations from DB + handle success/error params from OAuth callback
   useEffect(() => {
@@ -68,9 +79,9 @@ function ConnectPageInner() {
           return
         }
 
-        // If the user signed in via Azure or Google, auto-initiate the matching admin OAuth flow
+        // If the callback explicitly passed login_via, auto-initiate the matching admin OAuth flow
         // (only on first visit — skip if they've already connected that provider)
-        const loginVia = searchParams.get('login_via') ?? (user.app_metadata?.provider as string | undefined) ?? ''
+        const loginVia = searchParams.get('login_via') ?? ''
         if (loginVia === 'azure' && !savedProviders.includes('microsoft')) {
           window.location.href = '/api/integrations/microsoft/connect'
           return
@@ -112,6 +123,19 @@ function ConnectPageInner() {
 
     loadConnected()
   }, [searchParams])
+
+  const handleConnect = async (integrationId: string, connectUrl: string) => {
+    setConnecting(integrationId)
+    setError(null)
+    try {
+      const res = await fetch(connectUrl)
+      const { url } = await res.json()
+      window.location.href = url
+    } catch {
+      setError('Failed to initiate connection. Please try again.')
+      setConnecting(null)
+    }
+  }
 
   const handleOpenAISave = async () => {
     setSaving(true)
@@ -271,10 +295,11 @@ function ConnectPageInner() {
                       </div>
                     ) : (
                       <button
-                        onClick={() => { window.location.href = integration.connectUrl }}
-                        className="btn-secondary-dark text-sm px-4 py-2 rounded-lg"
+                        onClick={() => handleConnect(integration.id, integration.connectUrl)}
+                        disabled={connecting === integration.id}
+                        className="btn-secondary-dark text-sm px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Connect
+                        {connecting === integration.id ? 'Redirecting…' : 'Connect'}
                       </button>
                     )}
                   </div>

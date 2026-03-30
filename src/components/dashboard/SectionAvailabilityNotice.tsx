@@ -8,9 +8,9 @@ export default function SectionAvailabilityNotice({
   message,
 }: SectionAvailabilityNoticeProps) {
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-xl p-8 text-center">
-      <p className="text-gray-300 font-medium">{title}</p>
-      <p className="text-gray-500 text-sm mt-2">{message}</p>
+    <div className="rounded-[20px] border border-dashed border-[#dce9e2] bg-[#fbfcfb] p-8 text-center">
+      <p className="font-medium text-[#152820]">{title}</p>
+      <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#7f8f88]">{message}</p>
     </div>
   )
 }
