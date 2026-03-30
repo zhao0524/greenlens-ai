@@ -64,7 +64,7 @@ export function DashboardPage({
   children: ReactNode
   className?: string
 }) {
-  return <div className={cx('px-6 py-6 lg:px-8 lg:py-7', className)}>{children}</div>
+  return <div className={cx('px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-7', className)}>{children}</div>
 }
 
 export function DashboardHeader({
@@ -388,6 +388,7 @@ export function DashboardTable({
 }) {
   return (
     <div className="overflow-hidden rounded-[18px] border border-[#edf1ee]">
+      <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead className="bg-[#f4f7f5]">
           <tr className="border-b border-[#edf1ee]">
@@ -410,6 +411,7 @@ export function DashboardTable({
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }

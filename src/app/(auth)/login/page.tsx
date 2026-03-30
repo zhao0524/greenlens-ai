@@ -68,7 +68,7 @@ function LoginPageInner() {
       </div>
 
       {/* Centered card */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
         <div
           className="max-w-sm w-full rounded-2xl p-8 fade-in-up"
           style={{

@@ -61,7 +61,7 @@ export default function OnboardingPage() {
           <span className="text-white font-medium text-sm tracking-tight">GreenLens AI</span>
         </Link>
       </div>
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
       <div className="max-w-lg w-full">
         <h1 className="text-2xl font-bold text-white mb-2">Tell us about your company</h1>
         <p className="text-gray-400 mb-8">Step 1 of 3 — takes about 2 minutes</p>

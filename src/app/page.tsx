@@ -202,9 +202,9 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="relative hero-nature-bg overflow-hidden min-h-screen flex flex-col justify-center">
-        <div className="flex items-center gap-8 w-full">
+        <div className="flex flex-col lg:flex-row items-center gap-8 w-full pt-16 lg:pt-0">
           {/* Left: Text */}
-          <div className="pl-20 lg:pl-28 shrink-0 w-[48%]">
+          <div className="w-full lg:w-[48%] px-6 sm:px-10 lg:pl-28 lg:pr-0 shrink-0">
             <h1 className="text-5xl sm:text-6xl lg:text-[5.75rem] font-medium tracking-tight leading-[1.1] mb-10 fade-in-up text-white">
               Measure the environmental cost<br />of your enterprise AI
             </h1>
@@ -227,7 +227,7 @@ export default function Home() {
           </div>
 
           {/* Right: Dashboard mockup — flush to right edge */}
-          <div className="flex-1 fade-in-up animation-delay-200 flex justify-center items-center pl-0 pr-12">
+          <div className="w-full lg:flex-1 fade-in-up animation-delay-200 flex justify-center items-center px-6 sm:pr-12 lg:pl-0 lg:pr-12">
             <div className="dashboard-shadow rounded-tl-lg rounded-tr-lg overflow-hidden border-t border-l border-r border-white/10 w-full">
               <ExecutiveReport />
             </div>
@@ -244,7 +244,7 @@ export default function Home() {
             <div className="grid lg:grid-cols-2 gap-0 items-center w-full">
 
               {/* Left: Text */}
-              <div className="px-10 lg:px-20">
+              <div className="px-6 sm:px-10 lg:px-20">
                 <p className="text-[#236b42] text-lg font-medium tracking-widest uppercase mb-6">
                   The Visibility Gap
                 </p>
@@ -284,7 +284,7 @@ export default function Home() {
             }}
           >
             <div className="grid lg:grid-cols-2 gap-0 items-center w-full">
-              <div className="px-10 lg:px-20">
+              <div className="px-6 sm:px-10 lg:px-20">
                 <p className="text-lg font-medium tracking-widest uppercase mb-6 invisible">
                   The Visibility Gap
                 </p>
@@ -331,7 +331,7 @@ export default function Home() {
 
           {/* Tabs */}
           <div className="flex justify-center mb-6">
-            <div className="flex gap-1 bg-[#f0f0f0] rounded-full p-1">
+            <div className="flex flex-wrap justify-center gap-1 bg-[#f0f0f0] rounded-2xl p-1">
               {[
                 { id: 0, label: 'Carbon & Water' },
                 { id: 1, label: 'License Utilization' },
@@ -340,7 +340,7 @@ export default function Home() {
                 <button
                   key={tab.id}
                   onClick={() => setSolutionTab(tab.id)}
-                  className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  className={`px-3 sm:px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                     solutionTab === tab.id
                       ? 'bg-white text-[#1a1a1a] shadow-sm'
                       : 'text-[#666] hover:text-[#1a1a1a]'
@@ -365,12 +365,12 @@ export default function Home() {
 
       {/* Product Walkthrough Section */}
       <section id="product" className="py-24 lg:py-32 bg-[#14472c]">
-          <div className="grid lg:grid-cols-[3fr_2fr] gap-10 items-center">
+          <div className="grid lg:grid-cols-[3fr_2fr] gap-10 items-center px-6 lg:px-0">
 
             {/* Left: Bento Grid */}
-            <div className="pl-6 md:pl-12 lg:pl-16 grid grid-cols-2 gap-4">
+            <div className="md:pl-12 lg:pl-16 grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Carbon Footprint - Large */}
-            <div className="bg-white border border-[#e5e5e5] p-5 rounded-xl col-span-2 card-hover">
+            <div className="bg-white border border-[#e5e5e5] p-5 rounded-xl col-span-1 sm:col-span-2 card-hover">
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <p className="text-[#666] text-sm uppercase tracking-wide mb-1">Carbon Footprint</p>
@@ -503,7 +503,7 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
                 step: '1',
@@ -532,7 +532,7 @@ export default function Home() {
             ].map((item, index) => (
               <div
                 key={index}
-                className="relative rounded-2xl p-6 flex flex-col justify-between aspect-square overflow-hidden"
+                className="relative rounded-2xl p-6 flex flex-col justify-between aspect-auto sm:aspect-square overflow-hidden"
                 style={{ background: '#fff', border: '2px solid #14472c' }}
               >
                 {/* Top row: icon left, large number right */}
@@ -569,7 +569,7 @@ export default function Home() {
       <section className="py-24 lg:py-32 relative overflow-hidden">
         <div className="container-custom relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-medium tracking-tight mb-8 text-white whitespace-nowrap">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-medium tracking-tight mb-8 text-white">
               Get your first AI impact report
             </h2>
             <p className="text-white/70 text-2xl mb-12 max-w-2xl mx-auto">
@@ -590,7 +590,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="py-12 relative z-10 px-6 lg:px-10">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-md bg-[#236b42] flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-white" strokeWidth={1.5} />
