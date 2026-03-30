@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import {
   CheckCircle2,
+  ChevronDown,
   TrendingDown,
   TrendingUp,
 } from 'lucide-react'
@@ -98,10 +99,49 @@ export function DashboardMetaPill({ children }: { children: ReactNode }) {
   )
 }
 
-export function DashboardFilterBar({ children }: { children: ReactNode }) {
+type DashboardFilterItem = {
+  label: string
+  value: string
+}
+
+type DashboardFilterBarProps =
+  | {
+      children: ReactNode
+      items?: never
+      actionLabel?: never
+    }
+  | {
+      children?: never
+      items: DashboardFilterItem[]
+      actionLabel?: string
+    }
+
+export function DashboardFilterBar(props: DashboardFilterBarProps) {
+  if ('items' in props && props.items) {
+    const { items, actionLabel = 'Apply Filter' } = props
+    return (
+      <div className="grid gap-3 xl:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+        {items.map((item) => (
+          <DashboardFilterPill
+            key={item.label}
+            label={item.label}
+            value={item.value}
+            showChevron
+          />
+        ))}
+        <button
+          type="button"
+          className="inline-flex items-center justify-center rounded-2xl bg-[#3ac56d] px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(58,197,109,0.28)] transition hover:bg-[#35b964]"
+        >
+          {actionLabel}
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-wrap gap-3">
-      {children}
+      {props.children}
     </div>
   )
 }
@@ -109,15 +149,18 @@ export function DashboardFilterBar({ children }: { children: ReactNode }) {
 export function DashboardFilterPill({
   label,
   value,
+  showChevron = false,
 }: {
   label: string
   value: string
+  showChevron?: boolean
 }) {
   return (
     <div className="flex-1 basis-40 rounded-2xl border border-[#eef1ee] bg-white px-4 py-3 shadow-[0_4px_14px_rgba(16,38,29,0.04)]">
       <p className="text-[10px] uppercase tracking-[0.18em] text-[#99a69f]">{label}</p>
-      <div className="mt-1">
+      <div className="mt-1 flex items-center justify-between gap-3">
         <span className="truncate text-sm font-medium text-[#1b2b23]">{value}</span>
+        {showChevron ? <ChevronDown className="h-4 w-4 text-[#8fa098]" /> : null}
       </div>
     </div>
   )
