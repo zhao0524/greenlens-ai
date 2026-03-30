@@ -85,7 +85,7 @@ export default async function ESGPage({ searchParams }: ESGPageProps) {
           actions={(
             <div className="flex items-center gap-3">
               <RerunAnalysisButton initialJobState={analysisJob} />
-              <DownloadPDFButton />
+              <DownloadPDFButton reportId={report.id} />
             </div>
           )}
         />
