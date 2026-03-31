@@ -40,7 +40,31 @@ export async function GET(request: Request) {
       .eq('supabase_user_id', user.id)
       .maybeSingle()
 
-    const hasCompany = !!company
+    let hasCompany = !!company
+
+    // If no company found for this OAuth user, check if a seeded/email-identity account
+    // exists with the same email and re-link its company to the new OAuth user.
+    if (!hasCompany && user.email) {
+      const { data: usersPage } = await serviceClient.auth.admin.listUsers({ perPage: 1000 })
+      const seedUser = usersPage?.users?.find(
+        (u) => u.email === user.email && u.id !== user.id
+      )
+      if (seedUser) {
+        const { data: seedCompany } = await serviceClient
+          .from('companies')
+          .select('id')
+          .eq('supabase_user_id', seedUser.id)
+          .maybeSingle()
+        if (seedCompany) {
+          await serviceClient
+            .from('companies')
+            .update({ supabase_user_id: user.id })
+            .eq('id', seedCompany.id)
+          hasCompany = true
+        }
+      }
+    }
+
     const provider = user.app_metadata?.provider ?? ''
     const providerParam = ['azure', 'google'].includes(provider) ? `?login_via=${provider}` : ''
 
