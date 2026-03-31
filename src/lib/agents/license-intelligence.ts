@@ -253,12 +253,12 @@ function buildUsageProviderSummary(modeledProvider: ModeledProviderSpend): Licen
     : 'Pricing coverage is pending.'
 
   const recommendation = modeledProvider.pricingCoverage === 'partial'
-    ? `${providerLabel} spend is partially modeled. ${coverageText}`
+    ? `${providerLabel} report-period spend is partially modeled. ${coverageText}`
     : modeledProvider.pricingCoverage === 'unmodeled'
       ? `${providerLabel} usage was detected, but the current model set does not match the pricing library yet.`
       : highestCostModel
-        ? `${providerLabel} spend is concentrated in ${highestCostModel.model}. Review whether its current workload requires that capability tier.`
-        : `${providerLabel} usage billing is modeled from token totals.`
+        ? `${providerLabel} report-period spend is concentrated in ${highestCostModel.model}. Review whether its current workload requires that capability tier.`
+        : `${providerLabel} usage billing is modeled from report-period token totals.`
 
   return {
     provider: providerLabel,
@@ -391,7 +391,7 @@ export async function runLicenseIntelligence(
         status: summary.pricingCoverage === 'unmodeled' ? 'unsupported' : 'fresh',
         message: summary.pricingCoverage === 'unmodeled'
           ? `${summary.provider} usage was detected, but billing could not be modeled for the current model mix.`
-          : `${summary.provider} billing was modeled from token usage totals.`,
+          : `${summary.provider} billing was modeled from report-period token usage totals.`,
         asOf: new Date().toISOString(),
       })
     )

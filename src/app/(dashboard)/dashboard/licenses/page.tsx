@@ -182,35 +182,31 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
   const computedSeatUtilization = computedSeatTotals.total > 0
     ? (computedSeatTotals.active / computedSeatTotals.total) * 100
     : null
-  const computedAnnualSpend = filteredProviders.reduce((sum, provider) => sum + (provider.estimatedAnnualCost ?? 0), 0)
-  const computedOptimization = filteredProviders.reduce((sum, provider) => sum + (getProviderOptimization(provider) ?? 0), 0)
-  const pricingCoverage = license?.pricingCoverage ?? (
-    providers.length === 0
-      ? 'none'
-      : providers.every((provider) => provider.pricingCoverage === 'modeled')
-        ? 'full'
-        : 'partial'
-  )
-  const displayAnnualSpend = selectedProvider
-    ? selectedProvider.estimatedAnnualCost ?? null
-    : license?.estimatedAnnualSpend
-      ?? license?.estimatedAnnualLicenseCost
-      ?? (computedAnnualSpend > 0 ? computedAnnualSpend : null)
-  const displayOptimization = selectedProvider
-    ? getProviderOptimization(selectedProvider)
-    : license?.potentialAnnualOptimization
-      ?? license?.potentialAnnualSavings
-      ?? (computedOptimization > 0 ? computedOptimization : null)
+  const aggregateSeatCommitment = seatProviders.reduce((sum, provider) => sum + (provider.estimatedAnnualCost ?? 0), 0)
+  const aggregateApiSpend = usageProviders.reduce((sum, provider) => sum + (provider.estimatedAnnualCost ?? 0), 0)
+  const aggregateSeatOptimization = seatProviders.reduce((sum, provider) => sum + (getProviderOptimization(provider) ?? 0), 0)
+  const displaySeatCommitment = selectedProvider
+    ? (getProviderBasis(selectedProvider) === 'seat' ? selectedProvider.estimatedAnnualCost ?? null : null)
+    : (aggregateSeatCommitment > 0 ? aggregateSeatCommitment : null)
+  const displayApiSpend = selectedProvider
+    ? (getProviderBasis(selectedProvider) === 'usage' ? selectedProvider.estimatedAnnualCost ?? null : null)
+    : (aggregateApiSpend > 0 ? aggregateApiSpend : null)
+  const displaySeatOptimization = selectedProvider
+    ? (getProviderBasis(selectedProvider) === 'seat' ? getProviderOptimization(selectedProvider) : null)
+    : (aggregateSeatOptimization > 0 ? aggregateSeatOptimization : null)
   const displaySeatUtilization = selectedProvider
     ? (getProviderBasis(selectedProvider) === 'seat' ? selectedProvider.utilizationRate ?? null : null)
     : license?.overallUtilizationRate ?? computedSeatUtilization
-  const optimizedSpend = displayAnnualSpend != null && displayOptimization != null
-    ? Math.max(0, displayAnnualSpend - displayOptimization)
-    : null
-  const savingsRate = displayAnnualSpend != null && displayOptimization != null && displayAnnualSpend > 0
-    ? (displayOptimization / displayAnnualSpend) * 100
+  const seatSavingsRate = displaySeatCommitment != null && displaySeatOptimization != null && displaySeatCommitment > 0
+    ? (displaySeatOptimization / displaySeatCommitment) * 100
     : null
   const modeledProviderCount = filteredProviders.filter((provider) => provider.pricingCoverage !== 'unmodeled').length
+  const apiPricingProviderCount = usageProviders.filter((provider) => provider.pricingCoverage !== 'unmodeled').length
+  const apiPricingCoverage = usageProviders.length === 0
+    ? 'none'
+    : usageProviders.every((provider) => provider.pricingCoverage === 'modeled')
+      ? 'full'
+      : 'partial'
   const optimizationActions = filteredProviders
     .filter((provider) => (
       (getProviderOptimization(provider) ?? 0) > 0 ||
@@ -224,8 +220,8 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
     <DashboardPage>
       <div className="space-y-5">
         <DashboardHeader
-          title="Billing and license intelligence"
-          subtitle={`${company!.name} · ${report.reporting_period}. Compare seat utilization alongside modeled API billing across the AI portfolio.`}
+          title="Licenses and API billing"
+          subtitle={`${company!.name} · ${report.reporting_period}. Keep seat-license utilization separate from report-period API billing so the portfolio math stays comparable.`}
           badge={<DashboardMetaPill>{providers.length > 0 ? `${providers.length} providers modeled` : 'Awaiting billing detail'}</DashboardMetaPill>}
           actions={<RerunAnalysisButton initialJobState={analysisJob} />}
         />
@@ -252,7 +248,7 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
             />
             <DashboardFilterPill
               label="Coverage"
-              value={pricingCoverage === 'full' ? 'Full pricing coverage' : pricingCoverage === 'partial' ? 'Partial pricing coverage' : 'Pricing pending'}
+              value={apiPricingCoverage === 'full' ? 'API pricing fully modeled' : apiPricingCoverage === 'partial' ? 'API pricing partially modeled' : 'API pricing pending'}
             />
           </DashboardFilterBar>
         </Suspense>
@@ -267,21 +263,21 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
         <AnimatedSection animKey={providerFilter}>
           <DashboardStatGrid>
             <DashboardStatCard
-              label="Modeled Spend"
-              value={displayAnnualSpend != null ? formatCurrency(displayAnnualSpend, true) : '—'}
-              unit="annualized billing"
-              helper={selectedProvider ? `${selectedProvider.provider} modeled spend` : 'Combined spend across priced providers'}
+              label="API Billing"
+              value={displayApiSpend != null ? formatCurrency(displayApiSpend, true) : '—'}
+              unit="report-period spend"
+              helper={selectedProvider && getProviderBasis(selectedProvider) === 'usage' ? `${selectedProvider.provider} token billing` : 'OpenAI and Anthropic billing for this report period'}
               icon={<DollarSign className="h-4 w-4" />}
-              statusLabel={modeledProviderCount > 0 ? `${modeledProviderCount} provider${modeledProviderCount !== 1 ? 's' : ''} priced` : 'Pricing pending'}
-              statusTone={modeledProviderCount > 0 ? 'good' : 'warning'}
+              statusLabel={apiPricingProviderCount > 0 ? `${apiPricingProviderCount} API provider${apiPricingProviderCount !== 1 ? 's' : ''} priced` : 'No API billing modeled'}
+              statusTone={apiPricingProviderCount > 0 ? 'good' : 'warning'}
             />
             <DashboardStatCard
-              label="Optimization"
-              value={displayOptimization != null ? formatCurrency(displayOptimization, true) : '—'}
-              unit="recoverable opportunity"
-              helper={selectedProvider ? `${selectedProvider.provider} modeled opportunity` : 'Seat-rightsizing opportunity'}
+              label="Seat Commitment"
+              value={displaySeatCommitment != null ? formatCurrency(displaySeatCommitment, true) : '—'}
+              unit="annual seat cost"
+              helper={selectedProvider && getProviderBasis(selectedProvider) === 'seat' ? `${selectedProvider.provider} annual seat spend` : 'Microsoft Copilot and Google seat commitments'}
               icon={<Receipt className="h-4 w-4" />}
-              statusLabel={savingsRate != null ? `${formatPercent(savingsRate, 0)} of spend` : 'Not modeled for every provider'}
+              statusLabel={seatSavingsRate != null ? `${formatPercent(seatSavingsRate, 0)} savings headroom` : 'Seat pricing varies by provider'}
             />
             <DashboardStatCard
               label="Seat Utilization"
@@ -293,13 +289,43 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
               statusTone={displaySeatUtilization != null && displaySeatUtilization >= 75 ? 'good' : 'warning'}
             />
             <DashboardStatCard
-              label="Coverage"
+              label="Renewal Savings"
+              value={displaySeatOptimization != null ? formatCurrency(displaySeatOptimization, true) : '—'}
+              unit="annualized opportunity"
+              helper="Seat-rightsizing savings before renewal"
+              icon={<AlertTriangle className="h-4 w-4" />}
+              statusLabel={earliestRenewal ? `${earliestRenewal.monthsToRenewal} months to soonest renewal` : 'No renewal alerts tracked'}
+              statusTone={earliestRenewal && earliestRenewal.monthsToRenewal <= 3 ? 'warning' : 'good'}
+            />
+          </DashboardStatGrid>
+        </AnimatedSection>
+
+        <AnimatedSection animKey={`${providerFilter}-mix`}>
+          <DashboardStatGrid columns={3}>
+            <DashboardStatCard
+              label="API Coverage"
               value={providers.length > 0 ? formatNumber(modeledProviderCount, 0) : '—'}
               unit="providers with billing"
-              helper="Providers with priced seat or token coverage"
-              icon={<AlertTriangle className="h-4 w-4" />}
-              statusLabel={pricingCoverage === 'full' ? 'All connected providers covered' : pricingCoverage === 'partial' ? 'Some providers partially priced' : 'No current pricing coverage'}
-              statusTone={pricingCoverage === 'full' ? 'good' : 'warning'}
+              helper="API providers with matched pricing"
+              icon={<DollarSign className="h-4 w-4" />}
+              statusLabel={apiPricingCoverage === 'full' ? 'All API providers covered' : apiPricingCoverage === 'partial' ? 'Some API pricing is partial' : 'No API pricing modeled'}
+              statusTone={apiPricingCoverage === 'full' ? 'good' : 'warning'}
+            />
+            <DashboardStatCard
+              label="Seat Providers"
+              value={formatNumber(seatProviders.length, 0)}
+              unit="seat products"
+              helper="Microsoft or Google seats in scope"
+              icon={<Gauge className="h-4 w-4" />}
+              statusLabel={seatProviders.length > 0 ? `${formatNumber(computedSeatTotals.total, 0)} total seats in scope` : 'No seat products selected'}
+            />
+            <DashboardStatCard
+              label="API Providers"
+              value={formatNumber(usageProviders.length, 0)}
+              unit="usage-billed providers"
+              helper="Providers modeled from token usage"
+              icon={<Receipt className="h-4 w-4" />}
+              statusLabel={usageProviders.length > 0 ? 'OpenAI live now; Anthropic appears when connected' : 'No API providers selected'}
             />
           </DashboardStatGrid>
         </AnimatedSection>
@@ -314,9 +340,9 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
             <>
               <div className="grid gap-4 xl:grid-cols-[1.02fr_0.98fr]">
                 <DashboardPanel
-                  title="Portfolio mix"
-                  subtitle="Where spend visibility, seat utilization, and coverage are strongest across the current AI portfolio."
-                  badge={<DashboardBadge tone={pricingCoverage === 'full' ? 'green' : 'amber'}>{pricingCoverage === 'full' ? 'Coverage modeled' : 'Coverage still partial'}</DashboardBadge>}
+                  title="Seat licenses"
+                  subtitle="Seat-based products stay on their own axis so utilization and annual commitments are compared like-for-like."
+                  badge={<DashboardBadge tone={seatProviders.length > 0 ? 'green' : 'slate'}>{seatProviders.length > 0 ? `${seatProviders.length} seat product${seatProviders.length !== 1 ? 's' : ''}` : 'No seat products'}</DashboardBadge>}
                 >
                   <div className="grid gap-3 md:grid-cols-2">
                     <DashboardMiniStat
@@ -325,16 +351,16 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
                       hint="Microsoft or Google seat-based products."
                     />
                     <DashboardMiniStat
-                      label="Usage providers"
-                      value={formatNumber(usageProviders.length, 0)}
-                      hint="Providers modeled from API token usage."
+                      label="Annual cost"
+                      value={formatCurrency(displaySeatCommitment)}
+                      hint="Annualized commitments across visible seat products."
                       tone="good"
                     />
                     <DashboardMiniStat
-                      label="Modeled providers"
-                      value={formatNumber(modeledProviderCount, 0)}
-                      hint="Providers with priced spend visibility."
-                      tone={modeledProviderCount > 0 ? 'good' : 'default'}
+                      label="Utilization"
+                      value={displaySeatUtilization != null ? formatPercent(displaySeatUtilization, 0) : '—'}
+                      hint="Active seats divided by assigned seats."
+                      tone={displaySeatUtilization != null && displaySeatUtilization >= 75 ? 'good' : 'warning'}
                     />
                     <DashboardMiniStat
                       label="Soonest renewal"
@@ -344,70 +370,75 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
                     />
                   </div>
 
-                  <div className="mt-4 space-y-3">
-                    {filteredProviders.map((provider) => (
-                      <DashboardBarRow
-                        key={provider.provider}
-                        label={provider.provider}
-                        value={getProviderMetricLabel(provider)}
-                        percentage={getProviderMetricPercentage(provider, displayAnnualSpend)}
-                        tone={getProviderBasis(provider) === 'seat' ? ((provider.utilizationRate ?? 100) < 75 ? 'amber' : 'green') : (provider.pricingCoverage === 'partial' ? 'amber' : 'green')}
-                        hint={getProviderMetricHint(provider)}
-                      />
-                    ))}
-                  </div>
+                  {seatProviders.length > 0 ? (
+                    <div className="mt-4 space-y-3">
+                      {seatProviders.map((provider) => (
+                        <DashboardBarRow
+                          key={provider.provider}
+                          label={provider.provider}
+                          value={getProviderMetricLabel(provider)}
+                          percentage={provider.utilizationRate ?? 0}
+                          tone={(provider.utilizationRate ?? 100) < 75 ? 'amber' : 'green'}
+                          hint={getProviderMetricHint(provider)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <DashboardEmptyState
+                      title="No seat-license providers in this view"
+                      message="Filter to Microsoft Copilot or Google Workspace to review seat utilization and renewal timing."
+                    />
+                  )}
                 </DashboardPanel>
 
                 <DashboardPanel
-                  title="Spend and optimization"
-                  subtitle="Modeled annual spend, the optimization currently quantified, and how much pricing coverage exists behind those figures."
-                  badge={<DashboardMetaPill>{optimizedSpend != null ? `${formatCurrency(optimizedSpend, true)} optimized spend` : 'Optimization still partial'}</DashboardMetaPill>}
+                  title="API billing"
+                  subtitle="Token-billed providers are shown separately so report-period usage cost is not mixed with annual seat commitments."
+                  badge={<DashboardMetaPill>{displayApiSpend != null ? `${formatCurrency(displayApiSpend, true)} this period` : 'No API billing visible'}</DashboardMetaPill>}
                 >
                   <div className="grid gap-3 md:grid-cols-2">
                     <DashboardMiniStat
-                      label="Current annual spend"
-                      value={formatCurrency(displayAnnualSpend)}
-                      hint="Includes seat pricing and modeled token billing where available."
+                      label="Current-period spend"
+                      value={formatCurrency(displayApiSpend)}
+                      hint="Modeled from token totals in this report window."
                     />
                     <DashboardMiniStat
-                      label="Optimization"
-                      value={formatCurrency(displayOptimization)}
-                      hint="Renewal savings and other directly-modeled opportunity."
-                      tone="good"
-                    />
-                    <DashboardMiniStat
-                      label="Optimized spend"
-                      value={formatCurrency(optimizedSpend)}
-                      hint="Current spend less modeled opportunity."
-                      tone="good"
+                      label="API providers"
+                      value={formatNumber(usageProviders.length, 0)}
+                      hint="OpenAI and any other token-billed providers in scope."
+                      tone={usageProviders.length > 0 ? 'good' : 'default'}
                     />
                     <DashboardMiniStat
                       label="Pricing coverage"
-                      value={pricingCoverage === 'full' ? 'Full' : pricingCoverage === 'partial' ? 'Partial' : 'None'}
-                      hint={license.pricedProviderCount != null ? `${license.pricedProviderCount} provider${license.pricedProviderCount !== 1 ? 's' : ''} priced` : 'Coverage based on connected providers'}
-                      tone={pricingCoverage === 'full' ? 'good' : 'warning'}
+                      value={apiPricingCoverage === 'full' ? 'Full' : apiPricingCoverage === 'partial' ? 'Partial' : 'None'}
+                      hint={`${apiPricingProviderCount} API provider${apiPricingProviderCount !== 1 ? 's' : ''} priced in the current view.`}
+                      tone={apiPricingCoverage === 'full' ? 'good' : 'warning'}
+                    />
+                    <DashboardMiniStat
+                      label="Anthropic status"
+                      value={usageProviders.some((provider) => provider.provider === 'Anthropic') ? 'Live' : 'Not connected'}
+                      hint="Pricing support is ready; usage appears here only when Anthropic is connected."
                     />
                   </div>
 
-                  {displayAnnualSpend != null && (
+                  {usageProviders.length > 0 ? (
                     <div className="mt-4 space-y-3">
-                      <DashboardBarRow
-                        label="Current spend"
-                        value={formatCurrency(displayAnnualSpend)}
-                        percentage={100}
-                        tone="slate"
-                        hint="Current modeled annual spend."
-                      />
-                      {optimizedSpend != null && (
+                      {usageProviders.map((provider) => (
                         <DashboardBarRow
-                          label="Optimized spend"
-                          value={formatCurrency(optimizedSpend)}
-                          percentage={displayAnnualSpend > 0 ? (optimizedSpend / displayAnnualSpend) * 100 : 0}
-                          tone="green"
-                          hint="Modeled spend after current quantified opportunities are captured."
+                          key={provider.provider}
+                          label={provider.provider}
+                          value={formatCurrency(provider.estimatedAnnualCost)}
+                          percentage={getProviderMetricPercentage(provider, displayApiSpend)}
+                          tone={provider.pricingCoverage === 'modeled' ? 'green' : 'amber'}
+                          hint={`${formatCompactNumber(provider.totalRequests, 1)} requests · ${formatCoverageLabel(provider)} · report-period billing`}
                         />
-                      )}
+                      ))}
                     </div>
+                  ) : (
+                    <DashboardEmptyState
+                      title="No API billing providers in this view"
+                      message="Connect OpenAI to see token-billed spend here. Anthropic pricing is supported once Anthropic usage is connected."
+                    />
                   )}
                 </DashboardPanel>
               </div>
@@ -467,9 +498,9 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
                                   tone={provider.pricingCoverage === 'modeled' ? 'good' : 'warning'}
                                 />
                                 <DashboardMiniStat
-                                  label="Modeled spend"
+                                  label="Current-period spend"
                                   value={formatCurrency(provider.estimatedAnnualCost)}
-                                  hint="Derived from provider token totals and current pricing."
+                                  hint="Derived from report-period token totals and current pricing."
                                   tone="good"
                                 />
                               </>
@@ -545,11 +576,11 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
 
                 <DashboardPanel
                   title="Billing ledger"
-                  subtitle="Provider-level basis, activity, spend, and coverage in one comparable table."
+                  subtitle="Provider-level basis, activity, spend, and coverage in one comparable table. Seat rows are annualized; API rows reflect the report period."
                   badge={<DashboardMetaPill>{filteredProviders.length} providers</DashboardMetaPill>}
                 >
                   <DashboardTable
-                    headers={['Provider', 'Basis', 'Coverage', 'Activity', 'Spend', 'Opportunity']}
+                    headers={['Provider', 'Basis', 'Coverage', 'Activity', 'Spend Basis', 'Opportunity']}
                     rows={filteredProviders.map((provider) => [
                       <span key={`${provider.provider}-name`} className="font-medium text-[#152820]">{provider.provider}</span>,
                       <span key={`${provider.provider}-basis`} className="text-[#2e4a40]">{getProviderBasis(provider) === 'seat' ? 'Seat' : 'Usage'}</span>,
@@ -559,7 +590,9 @@ export default async function LicensesPage({ searchParams }: LicensesPageProps) 
                           ? `${formatNumber(getProviderActiveUnits(provider), 0)}/${formatNumber(getProviderTotalUnits(provider), 0)} active · ${formatNumber(getProviderDormantUnits(provider), 0)} dormant`
                           : `${formatCompactNumber(provider.totalRequests, 1)} requests · ${formatNumber(provider.modelCount, 0)} models`}
                       </span>,
-                      <span key={`${provider.provider}-cost`} className="text-[#2e4a40]">{formatCurrency(provider.estimatedAnnualCost)}</span>,
+                      <span key={`${provider.provider}-cost`} className="text-[#2e4a40]">
+                        {formatCurrency(provider.estimatedAnnualCost)} {getProviderBasis(provider) === 'seat' ? '/ year' : '/ period'}
+                      </span>,
                       <span key={`${provider.provider}-savings`} className="text-emerald-700">{formatCurrency(getProviderOptimization(provider))}</span>,
                     ])}
                   />
