@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import React from 'react'
 import {
   Document, Page, Text, View, StyleSheet, renderToBuffer,
-  Svg, Path, Line, G, Circle,
+  Svg, Path, Line, Circle,
 } from '@react-pdf/renderer'
 import { createClient } from '@/lib/supabase/server'
 import { getPreferredReport } from '@/lib/reports/get-preferred-report'
@@ -565,8 +565,9 @@ function EsgPDF({
   const totalSeats     = (license.totalLicensedSeats     as number | null) ?? null
   const activeSeats    = (license.totalActiveSeats       as number | null) ?? null
   const dormantSeats   = (license.totalDormantSeats      as number | null) ?? null
-  const annualCost     = (license.estimatedAnnualLicenseCost as number | null) ?? null
-  const annualSavings  = (license.potentialAnnualSavings    as number | null) ?? null
+  const annualCost     = ((license.estimatedAnnualSpend ?? license.estimatedAnnualLicenseCost) as number | null) ?? null
+  const annualSavings  = ((license.potentialAnnualOptimization ?? license.potentialAnnualSavings) as number | null) ?? null
+  const pricingCoverage = str(license.pricingCoverage ?? 'none')
   const providers      = (license.providers              as unknown[]) ?? []
   const renewalAlerts  = (license.renewalAlerts          as unknown[]) ?? []
 
@@ -1046,43 +1047,49 @@ function EsgPDF({
           React.createElement(Text, { style: styles.statValue }, dormantSeats != null ? fmt(dormantSeats) : '—'),
         ),
         React.createElement(View, { style: styles.statCardAlt },
-          React.createElement(Text, { style: styles.statLabel }, 'Annual Cost'),
+          React.createElement(Text, { style: styles.statLabel }, 'Modeled Spend'),
           React.createElement(Text, { style: styles.statValueAlt }, annualCost != null ? fmtCurrency(annualCost) : '—'),
         ),
       ),
       React.createElement(BodyText, null,
-        `AI licence expenditure represents one of the fastest-growing categories of enterprise software spend. For ${companyName}, the data reveals ${totalSeats != null ? `${fmt(totalSeats)} licensed seats` : 'a significant number of licensed seats'} across connected providers, of which ${activeSeats != null ? `${fmt(activeSeats)} (${totalSeats != null && activeSeats != null ? pct((activeSeats / totalSeats) * 100) : 'the majority'})` : 'the active portion'} were used during the reporting period. The ${dormantSeats != null ? `${fmt(dormantSeats)} dormant seats` : 'dormant seats'} identified represent paid capacity generating no value. This pattern is commonplace in enterprise AI rollouts, where initial broad licensing is followed by uneven adoption across departments.`
+        `AI billing and licence expenditure represent one of the fastest-growing categories of enterprise software spend. For ${companyName}, the data reveals ${totalSeats != null ? `${fmt(totalSeats)} licensed seats` : 'the connected seat footprint'} alongside metered API consumption across connected providers. ${activeSeats != null && totalSeats != null ? `${fmt(activeSeats)} seats were active during the reporting period, leaving ${dormantSeats != null ? fmt(dormantSeats) : 'a measurable number of'} dormant seats generating no value.` : 'The report distinguishes seat-based adoption from usage-based spend so finance and platform teams can see where cost is fixed versus metered.'}`
       ),
       React.createElement(BodyText, null,
-        `The estimated annual licence cost of ${annualCost != null ? fmtCurrency(annualCost) : 'the measured total'} provides the financial baseline against which the optimisation opportunity should be assessed. Rationalising dormant seats at renewal, rather than rolling them forward, creates an immediate annualised saving of ${annualSavings != null ? fmtCurrency(annualSavings) : 'a material amount'} at current provider pricing. This is not a one-time benefit: dormant seat rationalisation compounded with task-appropriate model selection typically yields cost reductions of 15–35% versus unmanaged AI spend, based on GreenLens AI's analysis across comparable organisations.`
+        `The estimated annual AI spend of ${annualCost != null ? fmtCurrency(annualCost) : 'the measured total'} provides the financial baseline against which the optimisation opportunity should be assessed. The currently-modeled opportunity of ${annualSavings != null ? fmtCurrency(annualSavings) : 'a material amount'} reflects rightsizing and other directly-quantified interventions at current provider pricing. Pricing coverage for this section is ${pricingCoverage}, so the figures should be interpreted as a measured baseline rather than a theoretical estimate.`
       ),
       React.createElement(BodyText, null,
-        `From an ESG reporting perspective, licence utilisation data serves a secondary but important function: it enables the separation of licensed capacity from actual consumption in environmental calculations. An organisation that holds 500 seats but actively uses 200 should not be attributed the full environmental footprint of 500 users. This distinction is increasingly material as carbon accounting standards evolve and as Scope 3 AI emissions begin to feature in supply chain due diligence questionnaires from major enterprise customers.`
+        `From an ESG reporting perspective, separating licensed capacity from metered consumption serves a secondary but important function: it avoids attributing the environmental footprint of unused seats or unbilled workloads to the wrong operational baseline. This distinction is increasingly material as carbon accounting standards evolve and as Scope 3 AI emissions begin to feature in supply chain due diligence questionnaires from major enterprise customers.`
       ),
       providers.length > 0
         ? React.createElement(View, null,
             React.createElement(Subheading, null, 'Provider Breakdown'),
             React.createElement(View, { style: styles.tableHeader },
               React.createElement(Text, { style: { ...styles.tableHeaderCell, flex: 2 } }, 'Provider'),
-              React.createElement(Text, { style: { ...styles.tableHeaderCell, flex: 1 } }, 'Seats'),
-              React.createElement(Text, { style: { ...styles.tableHeaderCell, flex: 1 } }, 'Active'),
-              React.createElement(Text, { style: { ...styles.tableHeaderCell, flex: 1 } }, 'Util. %'),
+              React.createElement(Text, { style: { ...styles.tableHeaderCell, flex: 1 } }, 'Basis'),
+              React.createElement(Text, { style: { ...styles.tableHeaderCell, flex: 1.8 } }, 'Activity'),
+              React.createElement(Text, { style: { ...styles.tableHeaderCell, flex: 1 } }, 'Coverage'),
               React.createElement(Text, { style: { ...styles.tableHeaderCell, flex: 1.5 } }, 'Annual Cost'),
-              React.createElement(Text, { style: { ...styles.tableHeaderCell, flex: 1.5 } }, 'Savings Potential'),
+              React.createElement(Text, { style: { ...styles.tableHeaderCell, flex: 1.5 } }, 'Opportunity'),
             ),
             ...providers.slice(0, 8).map((p: unknown, i: number) => {
               const prov = p as Json
               const pName = str(prov.provider ?? prov.name ?? `Provider ${i + 1}`)
-              const seats = (prov.totalSeats ?? prov.total_seats) as number | null
-              const active = (prov.activeSeats ?? prov.active_seats) as number | null
-              const utilR = (prov.utilizationRate ?? prov.utilization_rate) as number | null
+              const basis = str(prov.billingBasis ?? ((prov.totalSeats ?? prov.total_seats) != null ? 'seat' : 'usage'))
+              const totalUnits = (prov.totalUnits ?? prov.total_units ?? prov.totalSeats ?? prov.total_seats ?? prov.totalRequests ?? prov.total_requests) as number | null
+              const activeUnits = (prov.activeUnits ?? prov.active_units ?? prov.activeSeats ?? prov.active_seats) as number | null
+              const dormantUnits = (prov.dormantUnits ?? prov.dormant_units ?? prov.dormantSeats ?? prov.dormant_seats) as number | null
+              const totalRequests = (prov.totalRequests ?? prov.total_requests) as number | null
+              const modelCount = (prov.modelCount ?? prov.model_count) as number | null
+              const coverage = str(prov.pricingCoverage ?? prov.pricing_coverage ?? 'pending')
               const cost = (prov.estimatedAnnualCost ?? prov.estimated_annual_cost) as number | null
-              const savings = (prov.potentialSavingsAtRenewal ?? prov.potential_savings) as number | null
+              const savings = ((prov.optimizationOpportunity ?? prov.optimization_opportunity ?? prov.potentialSavingsAtRenewal ?? prov.potential_savings) as number | null) ?? null
               return React.createElement(View, { key: `prov-${i}`, style: i % 2 === 0 ? styles.tableRow : styles.tableRowAlt },
                 React.createElement(Text, { style: { ...styles.tableCell, flex: 2 } }, pName),
-                React.createElement(Text, { style: { ...styles.tableCellMuted, flex: 1 } }, seats != null ? fmt(seats) : '—'),
-                React.createElement(Text, { style: { ...styles.tableCellMuted, flex: 1 } }, active != null ? fmt(active) : '—'),
-                React.createElement(Text, { style: { ...styles.tableCellMuted, flex: 1 } }, utilR != null ? `${fmt(utilR, 1)}%` : '—'),
+                React.createElement(Text, { style: { ...styles.tableCellMuted, flex: 1 } }, basis),
+                React.createElement(Text, { style: { ...styles.tableCellMuted, flex: 1.8 } }, basis === 'seat'
+                  ? `${activeUnits != null ? fmt(activeUnits) : '—'}/${totalUnits != null ? fmt(totalUnits) : '—'} active${dormantUnits != null ? ` · ${fmt(dormantUnits)} dormant` : ''}`
+                  : `${totalRequests != null ? fmt(totalRequests) : '—'} requests${modelCount != null ? ` · ${fmt(modelCount)} models` : ''}`),
+                React.createElement(Text, { style: { ...styles.tableCellMuted, flex: 1 } }, coverage),
                 React.createElement(Text, { style: { ...styles.tableCellMuted, flex: 1.5 } }, cost != null ? fmtCurrency(cost) : '—'),
                 React.createElement(Text, { style: { ...styles.tableCellMuted, flex: 1.5 } }, savings != null ? fmtCurrency(savings) : '—'),
               )
@@ -1470,15 +1477,13 @@ Write in authoritative corporate language. No markdown. No bullet points. Flowin
     }
 
     // ── Render PDF ────────────────────────────────────────────────────────
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfBuffer = await renderToBuffer(
-      React.createElement(EsgPDF, {
-        report: report as Record<string, unknown>,
-        companyName,
-        geminiNarrative,
-        geminiGlobal,
-      }) as unknown as any
-    )
+    const pdfDocument = EsgPDF({
+      report: report as Json,
+      companyName,
+      geminiNarrative,
+      geminiGlobal,
+    })
+    const pdfBuffer = await renderToBuffer(pdfDocument)
 
     const companySlug = companyName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
     const dateSlug    = new Date().toISOString().slice(0, 10)

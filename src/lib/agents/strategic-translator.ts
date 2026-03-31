@@ -30,7 +30,10 @@ interface LicenseSummary {
   totalDormantSeats?: number
   overallUtilizationRate?: number | null
   estimatedAnnualLicenseCost?: number | null
+  estimatedAnnualSpend?: number | null
   potentialAnnualSavings?: number | null
+  potentialAnnualOptimization?: number | null
+  pricingCoverage?: 'full' | 'partial' | 'none'
   renewalAlerts?: unknown[]
 }
 
@@ -98,12 +101,14 @@ function buildPrompt(
   company: CompanyProfile,
   incentives: Array<Record<string, unknown>>
 ) {
-  const annualLicenseCost = licenseResult.estimatedAnnualLicenseCost != null
-    ? `$${licenseResult.estimatedAnnualLicenseCost.toLocaleString()}`
-    : 'Not modeled for all connected license providers.'
-  const potentialRenewalSavings = licenseResult.potentialAnnualSavings != null
-    ? `$${licenseResult.potentialAnnualSavings.toLocaleString()}`
-    : 'Not modeled for all connected license providers.'
+  const annualModeledSpend = licenseResult.estimatedAnnualSpend ?? licenseResult.estimatedAnnualLicenseCost
+  const potentialOptimization = licenseResult.potentialAnnualOptimization ?? licenseResult.potentialAnnualSavings
+  const annualSpendText = annualModeledSpend != null
+    ? `$${annualModeledSpend.toLocaleString()}`
+    : 'Not modeled for all connected providers.'
+  const optimizationText = potentialOptimization != null
+    ? `$${potentialOptimization.toLocaleString()}`
+    : 'Not modeled for all connected providers.'
 
   const officeList = company?.international_offices?.length
     ? company.international_offices.join(', ')
@@ -132,10 +137,11 @@ for tasks that do not require them.
 Optimal model scenario saves ${carbonWaterResult.carbonSavingsKg?.toFixed(1)} kg CO2 and
 ${carbonWaterResult.waterSavingsLiters?.toLocaleString()} liters per month.
 
-License: ${licenseResult.totalLicensedSeats} licensed seats, ${licenseResult.totalActiveSeats} active,
+Billing and licenses: ${licenseResult.totalLicensedSeats} licensed seats, ${licenseResult.totalActiveSeats} active,
 ${licenseResult.totalDormantSeats} dormant. Utilization: ${licenseResult.overallUtilizationRate}%.
-Annual license cost: ${annualLicenseCost}.
-Potential renewal savings: ${potentialRenewalSavings}.
+Annual modeled AI spend: ${annualSpendText}.
+Potential optimization opportunity: ${optimizationText}.
+Pricing coverage: ${licenseResult.pricingCoverage}.
 Renewal alerts: ${JSON.stringify(licenseResult.renewalAlerts)}.
 
 Statistical analysis:

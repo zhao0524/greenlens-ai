@@ -480,9 +480,12 @@ async function executePipelineStep(
 
     case 'license_intelligence': {
       const integrations = await getActiveIntegrations(supabase, companyId)
+      const usageResult = artifacts.outputs.usage_analyst as UsageAnalysisResult | undefined
       const licenseResult = await withTimeout(
         'License intelligence',
-        runLicenseIntelligence(integrations),
+        runLicenseIntelligence(integrations, {
+          usageRecords: usageResult?.normalizedUsage,
+        }),
         20000
       )
 
@@ -791,7 +794,9 @@ function buildPartialTranslation(
     ?? 'Supported usage data is unavailable in this build.'
   const availableLicenseProviders = license.providers.map((provider) => provider.provider).join(', ')
   const licenseMessage = license.availability.status === 'available'
-    ? `License utilization is available${availableLicenseProviders ? ` for ${availableLicenseProviders}` : ''}: ${license.overallUtilizationRate}% across ${license.totalLicensedSeats} seats.`
+    ? license.totalLicensedSeats > 0
+      ? `Billing and license visibility is available${availableLicenseProviders ? ` for ${availableLicenseProviders}` : ''}: ${license.overallUtilizationRate}% across ${license.totalLicensedSeats} seats, with ${license.estimatedAnnualSpend != null ? `$${license.estimatedAnnualSpend.toLocaleString()}` : 'partial'} spend coverage.`
+      : `Modeled AI billing is available${availableLicenseProviders ? ` for ${availableLicenseProviders}` : ''}${license.estimatedAnnualSpend != null ? `: $${license.estimatedAnnualSpend.toLocaleString()} annualized spend.` : '.'}`
     : license.availability.message ?? 'No supported license analysis is available.'
 
   return {
@@ -813,7 +818,9 @@ function buildPartialTranslation(
       usageMessage,
       'Usage-derived environmental metrics were not calculated because a supported usage provider was not connected.',
       license.availability.status === 'available'
-        ? `License utilization remained available at ${license.overallUtilizationRate}% across ${license.totalLicensedSeats} seats.`
+        ? license.totalLicensedSeats > 0
+          ? `Billing and seat utilization remained available at ${license.overallUtilizationRate}% across ${license.totalLicensedSeats} seats.`
+          : `Modeled AI billing remained available${license.estimatedAnnualSpend != null ? ` at $${license.estimatedAnnualSpend.toLocaleString()} annualized spend.` : '.'}`
         : '',
     ].filter(Boolean).join(' '),
   }

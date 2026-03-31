@@ -71,7 +71,7 @@ export function getFakeOpenAIUsage(demoRunIndex: number = 1) {
   const demoRunPhase = getDemoRunPhase(demoRunIndex)
   const gpt4oDelta = demoRunPhase * 150
   const gpt4oMiniDelta = demoRunPhase * 110
-  const gpt35Delta = demoRunPhase * 60
+  const gpt41MiniDelta = demoRunPhase * 60
   const embeddingDelta = demoRunPhase * 20
 
   const normalizedUsage = [
@@ -90,14 +90,14 @@ export function getFakeOpenAIUsage(demoRunIndex: number = 1) {
       totalOutputTokens: 900_000,
     },
     {
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4.1-mini',
       provider: 'openai' as const,
       totalRequests: 4800,
       totalInputTokens: 1_400_000,
       totalOutputTokens: 480_000,
     },
     {
-      model: 'text-embedding-ada-002',
+      model: 'text-embedding-3-small',
       provider: 'openai' as const,
       totalRequests: 1400,
       totalInputTokens: 3_200_000,
@@ -110,8 +110,8 @@ export function getFakeOpenAIUsage(demoRunIndex: number = 1) {
     if (record.model === 'gpt-4o-mini') {
       return applyRequestDelta(record, gpt4oMiniDelta)
     }
-    if (record.model === 'gpt-3.5-turbo') {
-      return applyRequestDelta(record, gpt35Delta)
+    if (record.model === 'gpt-4.1-mini') {
+      return applyRequestDelta(record, gpt41MiniDelta)
     }
     return applyRequestDelta(record, embeddingDelta)
   })
@@ -122,7 +122,7 @@ export function getFakeOpenAIUsage(demoRunIndex: number = 1) {
     241, 264, 718, 762, 788, 830, 851,
     229, 256, 745, 808, 774, 819, 836,
     217, 243, 761, 827, 793, 848, 812,
-  ], gpt4oDelta + gpt4oMiniDelta + gpt35Delta + embeddingDelta)
+  ], gpt4oDelta + gpt4oMiniDelta + gpt41MiniDelta + embeddingDelta)
 
   const today = new Date()
   const utcStartOfToday = new Date(Date.UTC(

@@ -32,6 +32,7 @@ import {
   formatNumber,
 } from '@/components/dashboard/DashboardPrimitives'
 import { DashboardFilterSelect } from '@/components/dashboard/DashboardFilterSelect'
+import { buildWorkingHoursTrendData, normalizeTrendDirection } from '@/lib/analysis/hourly-trend'
 
 interface OverviewDashboardProps {
   companyName: string
@@ -90,28 +91,10 @@ function buildDistributionData(props: OverviewDashboardProps) {
 }
 
 function buildTrendData(props: OverviewDashboardProps) {
-  const base = props.projected30dRequests != null
-    ? Math.max(180, props.projected30dRequests / 30)
-    : 720
-  const directionalSlope = props.trendDirection === 'upward'
-    ? 32
-    : props.trendDirection === 'downward'
-      ? -26
-      : 8
-  const amplitude = Math.max(40, base * 0.14)
-  const labels = ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00']
-
-  return labels.map((label, index) => {
-    const wave = Math.sin(index / 1.15) * amplitude
-    const slopeEffect = (index - 4) * directionalSlope
-    const anomalyBoost = props.anomalyDetected && index === 9 ? amplitude * 0.7 : 0
-    const actual = Math.max(80, Math.round(base + wave + slopeEffect + anomalyBoost))
-    const target = Math.round(Math.max(base * 1.15, actual * 1.08))
-    return {
-      label,
-      actual,
-      target,
-    }
+  return buildWorkingHoursTrendData({
+    projected30dRequests: props.projected30dRequests,
+    trendDirection: props.trendDirection,
+    anomalyDetected: props.anomalyDetected,
   })
 }
 
@@ -262,7 +245,7 @@ export default function OverviewDashboard(props: OverviewDashboardProps) {
             subtitle="Derived from benchmark and anomaly statistics for the current report."
             badge={(
               <DashboardMetaPill>
-                {props.benchmarkAvailable ? (props.trendDirection ?? 'stable') : 'benchmark unavailable'}
+                {props.benchmarkAvailable ? normalizeTrendDirection(props.trendDirection) : 'benchmark unavailable'}
               </DashboardMetaPill>
             )}
           >
@@ -318,6 +301,10 @@ export default function OverviewDashboard(props: OverviewDashboardProps) {
                 <span className="font-medium text-[#152820]">
                   {props.carbonPercentile != null ? `${Math.round(props.carbonPercentile)}th percentile` : 'Unavailable'}
                 </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[#4a5e56]">Trend direction</span>
+                <span className="font-medium text-[#152820]">{normalizeTrendDirection(props.trendDirection)}</span>
               </div>
             </div>
 

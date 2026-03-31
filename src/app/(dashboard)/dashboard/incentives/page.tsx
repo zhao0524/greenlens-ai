@@ -33,6 +33,7 @@ import {
   FileWarning,
   Globe,
 } from 'lucide-react'
+import { DashboardFilterToggleGroup } from '@/components/dashboard/DashboardFilterToggleGroup'
 
 const URGENCY_OPTIONS = [
   { label: 'All Incentives', value: 'all' },
@@ -41,11 +42,43 @@ const URGENCY_OPTIONS = [
   { label: 'Watchlist only', value: 'Watchlist' },
 ]
 
+const CATEGORY_OPTIONS = [
+  { label: 'Financial', value: 'financial' },
+  { label: 'Regulatory', value: 'regulatory' },
+  { label: 'Strategic', value: 'strategic' },
+] as const
+
+const CATEGORY_LABELS = {
+  financial: 'Financial',
+  regulatory: 'Regulatory',
+  strategic: 'Strategic',
+} as const
+
 interface IncentivesPageProps {
-  searchParams?: Promise<{ reportId?: string; urgency?: string }>
+  searchParams?: Promise<{ reportId?: string; urgency?: string; categories?: string | string[] }>
 }
 
-function categorizeIncentive(title: string, description: string, actionRequired?: string) {
+function resolveIncentiveCategory(
+  explicitCategory: string | undefined,
+  title: string,
+  description: string,
+  actionRequired?: string
+): 'Financial' | 'Regulatory' | 'Strategic' {
+  const normalizedExplicitCategory = explicitCategory?.trim().toLowerCase()
+  if (normalizedExplicitCategory === 'financial') {
+    return 'Financial'
+  }
+  if (normalizedExplicitCategory === 'regulatory') {
+    return 'Regulatory'
+  }
+  if (
+    normalizedExplicitCategory === 'strategic' ||
+    normalizedExplicitCategory === 'reputational' ||
+    normalizedExplicitCategory === 'operational'
+  ) {
+    return 'Strategic'
+  }
+
   const haystack = `${title} ${description} ${actionRequired ?? ''}`.toLowerCase()
   if (/(compliance|disclosure|regulation|reporting|required|obligation|audit)/.test(haystack)) {
     return 'Regulatory'
@@ -63,10 +96,22 @@ function categorizeUrgency(actionRequired?: string, description?: string) {
   return 'Watchlist'
 }
 
+function parseSelectedCategories(value: string | string[] | undefined) {
+  const rawValue = Array.isArray(value) ? value.join(',') : value ?? ''
+  const selected = rawValue
+    .split(',')
+    .map((item) => item.trim().toLowerCase())
+    .filter((item): item is keyof typeof CATEGORY_LABELS => item in CATEGORY_LABELS)
+
+  return selected.length > 0 ? selected : CATEGORY_OPTIONS.map((option) => option.value)
+}
+
 export default async function IncentivesPage({ searchParams }: IncentivesPageProps) {
   const params = await searchParams
   const requestedReportId = params?.reportId ?? null
   const urgencyFilter = params?.urgency ?? 'all'
+  const selectedCategoryValues = parseSelectedCategories(params?.categories)
+  const selectedCategories: Array<'Financial' | 'Regulatory' | 'Strategic'> = selectedCategoryValues.map((value) => CATEGORY_LABELS[value])
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const { data: company } = await supabase.from('companies').select('id, name')
@@ -91,16 +136,24 @@ export default async function IncentivesPage({ searchParams }: IncentivesPagePro
       ...incentive,
       actionRequired,
       estimatedValue,
-      category: categorizeIncentive(incentive.title, incentive.description, actionRequired),
+      category: resolveIncentiveCategory(
+        (incentive as { category?: string }).category,
+        incentive.title,
+        incentive.description,
+        actionRequired
+      ),
       urgency: categorizeUrgency(actionRequired, incentive.description),
       parsedValue,
     }
   })
 
   // Apply urgency filter before computing all stats so every number reflects the selected filter
-  const filteredIncentives = urgencyFilter === 'all'
+  const urgencyFilteredIncentives = urgencyFilter === 'all'
     ? enrichedIncentives
     : enrichedIncentives.filter((item) => item.urgency === urgencyFilter)
+  const filteredIncentives = urgencyFilteredIncentives.filter((item) => (
+    selectedCategories.length === CATEGORY_OPTIONS.length || selectedCategories.includes(item.category)
+  ))
 
   const regionSummary = Object.entries(filteredIncentives.reduce((acc, incentive) => {
     const key = incentive.region || 'Unspecified'
@@ -134,6 +187,12 @@ export default async function IncentivesPage({ searchParams }: IncentivesPagePro
 
         <Suspense>
           <DashboardFilterBar>
+            <DashboardFilterToggleGroup
+              label="Categories"
+              paramKey="categories"
+              options={[...CATEGORY_OPTIONS]}
+              values={selectedCategoryValues}
+            />
             <DashboardFilterSelect
               label="Urgency"
               paramKey="urgency"
@@ -148,6 +207,10 @@ export default async function IncentivesPage({ searchParams }: IncentivesPagePro
                 { label: `${report.reporting_period} (latest)`, value: 'all' },
                 ...availableReports.filter((r) => r.id !== report.id).map((r) => ({ label: r.reporting_period, value: r.id })),
               ]}
+            />
+            <DashboardFilterPill
+              label="Category Scope"
+              value={selectedCategories.length === CATEGORY_OPTIONS.length ? 'All categories' : selectedCategories.join(' + ')}
             />
           </DashboardFilterBar>
         </Suspense>
@@ -324,7 +387,7 @@ export default async function IncentivesPage({ searchParams }: IncentivesPagePro
               {filteredIncentives.length === 0 ? (
                 <DashboardEmptyState
                   title="No incentives match this filter"
-                  message="Try a different urgency level to see more opportunities."
+                  message="Try a different urgency level or category combination to see more opportunities."
                 />
               ) : (
                 <div className="space-y-6">

@@ -28,7 +28,7 @@ function buildIntegration(provider: string, accessToken: string): IntegrationRec
   }
 }
 
-test('OpenAI-only availability stays full while license remains unavailable', async () => {
+test('OpenAI-only availability stays full and unlocks modeled billing', async () => {
   const usageResult = await runUsageAnalyst([
     buildIntegration('openai', DEMO_SENTINEL_OPENAI),
   ])
@@ -41,10 +41,12 @@ test('OpenAI-only availability stays full while license remains unavailable', as
   })
 
   assert.equal(usageResult.availability.status, 'available')
-  assert.equal(licenseResult.availability.status, 'unavailable')
+  assert.equal(licenseResult.availability.status, 'available')
   assert.equal(availability.reportMode, 'full')
   assert.equal(availability.sectionAvailability.usage.status, 'available')
-  assert.equal(availability.sectionAvailability.license.status, 'unavailable')
+  assert.equal(availability.sectionAvailability.license.status, 'available')
+  assert.equal(licenseResult.pricingCoverage, 'full')
+  assert.ok((licenseResult.estimatedAnnualSpend ?? 0) > 0)
 })
 
 test('Microsoft-only availability produces a partial report with license data but unavailable usage sections', async () => {
@@ -97,7 +99,7 @@ test('Google-only availability unlocks license reporting while usage-derived sec
   )
 })
 
-test('Microsoft plus Google keeps aggregate seat utilization but clears aggregate pricing when any provider lacks pricing', async () => {
+test('Microsoft plus Google keeps aggregate seat utilization while retaining partial spend coverage', async () => {
   const licenseResult = await runLicenseIntelligence([
     buildIntegration('microsoft', DEMO_SENTINEL_MICROSOFT),
     buildIntegration('google', DEMO_SENTINEL_GOOGLE),
@@ -108,8 +110,9 @@ test('Microsoft plus Google keeps aggregate seat utilization but clears aggregat
   assert.equal(licenseResult.totalActiveSeats, 434)
   assert.equal(licenseResult.totalDormantSeats, 246)
   assert.equal(licenseResult.overallUtilizationRate, 64)
-  assert.equal(licenseResult.estimatedAnnualLicenseCost, null)
-  assert.equal(licenseResult.potentialAnnualSavings, null)
+  assert.equal(licenseResult.estimatedAnnualLicenseCost, 180000)
+  assert.equal(licenseResult.potentialAnnualSavings, 58320)
+  assert.equal(licenseResult.pricingCoverage, 'partial')
   assert.equal(licenseResult.providers.length, 2)
   assert.equal(
     licenseResult.providers.find((provider) => provider.provider === 'Google Workspace Gemini')?.estimatedAnnualCost,

@@ -25,6 +25,7 @@ import RerunAnalysisButton from '@/components/dashboard/RerunAnalysisButton'
 import { AnimatedSection } from '@/components/dashboard/AnimatedSection'
 import SectionAvailabilityNotice from '@/components/dashboard/SectionAvailabilityNotice'
 import TrendChart from '@/components/dashboard/TrendChart'
+import { buildWorkingHoursTrendData, normalizeTrendDirection } from '@/lib/analysis/hourly-trend'
 import { getCompanyAnalysisState } from '@/lib/analysis/get-company-analysis-state'
 import { getPreferredReport } from '@/lib/reports/get-preferred-report'
 import { getCompanyReports } from '@/lib/reports/get-company-reports'
@@ -87,16 +88,15 @@ export default async function BenchmarkPage({ searchParams }: BenchmarkPageProps
       recommendedClass: taskClustering?.clusters?.find((cluster) => cluster.task_category === taskCategory)?.appropriate_model_class ?? 'mixed',
     }))
     .sort((a, b) => b.count - a.count)
-  const trendData = Array.from({ length: 12 }, (_, index) => {
-    const base = meanDailyRequests ?? (projected30dRequests != null ? projected30dRequests / 30 : 780)
-    const slopeEffect = (slope ?? 0) * (index - 4) * 2.5
-    const seasonality = Math.sin(index / 1.2) * Math.max(28, base * 0.08)
-    const anomalyBoost = anomalyDetected && index === 8 ? Math.max(40, base * 0.22) : 0
-    return {
-      date: ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'][index],
-      requests: Math.max(80, Math.round(base + slopeEffect + seasonality + anomalyBoost)),
-    }
-  })
+  const trendData = buildWorkingHoursTrendData({
+    projected30dRequests: projected30dRequests ?? (meanDailyRequests != null ? meanDailyRequests * 30 : null),
+    trendDirection,
+    anomalyDetected,
+    slope,
+  }).map((point) => ({
+    date: point.label,
+    requests: point.actual,
+  }))
 
   return (
     <DashboardPage>
@@ -120,7 +120,7 @@ export default async function BenchmarkPage({ searchParams }: BenchmarkPageProps
               ]}
             />
             <DashboardFilterPill label="Industry" value={company!.industry?.replace(/_/g, ' ') ?? 'General benchmark set'} />
-            <DashboardFilterPill label="Trend" value={titleize(trendDirection)} />
+            <DashboardFilterPill label="Trend" value={titleize(normalizeTrendDirection(trendDirection))} />
           </DashboardFilterBar>
         </Suspense>
 
@@ -217,8 +217,8 @@ export default async function BenchmarkPage({ searchParams }: BenchmarkPageProps
 
               <DashboardPanel
                 title="Trend trajectory"
-                subtitle="Illustrative intraperiod request pattern derived from the benchmark trend model."
-                badge={<DashboardMetaPill>{titleize(trendDirection)}</DashboardMetaPill>}
+                subtitle="Illustrative hourly demand pattern aligned to the working-hours trajectory used on the Overview page."
+                badge={<DashboardMetaPill>{titleize(normalizeTrendDirection(trendDirection))}</DashboardMetaPill>}
               >
                 <TrendChart data={trendData} />
                 <div className="mt-4 grid gap-3 md:grid-cols-3">
