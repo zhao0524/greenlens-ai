@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, memo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowRight,
   BarChart3,
@@ -156,8 +157,8 @@ export default function Home() {
           {/* Logo + Nav */}
           <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-md bg-[#236b42] flex items-center justify-center">
-                <BarChart3 className="w-5 h-5 text-white" strokeWidth={1.5} />
+              <div className="relative w-7 h-7 rounded-full bg-[#7bdc93] shrink-0 overflow-hidden">
+                <Image src="/greenlens-logo.png" alt="GreenLens AI" fill className="object-cover scale-[1]" />
               </div>
               <span className="font-medium text-lg tracking-tight text-white">GreenLens AI</span>
             </Link>
@@ -601,8 +602,8 @@ export default function Home() {
       <footer className="py-12 relative z-10 px-6 lg:px-10">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-[#236b42] flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-white" strokeWidth={1.5} />
+            <div className="relative w-7 h-7 rounded-full bg-[#7bdc93] shrink-0 overflow-hidden">
+              <Image src="/greenlens-logo.png" alt="GreenLens AI" fill className="object-cover scale-[1]" />
             </div>
             <span className="font-medium text-lg tracking-tight text-white">GreenLens AI</span>
           </div>

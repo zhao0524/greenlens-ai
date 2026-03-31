@@ -2,6 +2,7 @@
 
 import { type ReactNode, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   Bot,
@@ -67,11 +68,11 @@ export default function DashboardShell({ companyName, children, footerActions }:
       {/* Mobile top bar */}
       <div className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-[#2d5d4c] lg:hidden">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#7bdc93] text-[#234638] shadow-lg">
-            <Leaf className="h-4 w-4" strokeWidth={2} />
+          <div className="relative h-7 w-7 shrink-0 rounded-full bg-[#7bdc93] shadow-lg overflow-hidden">
+            <Image src="/greenlens-logo.png" alt="GreenLens AI" fill className="object-cover scale-[1]" />
           </div>
           <div className="flex flex-col gap-0.5">
-            <p className="text-[13px] font-semibold leading-none text-white">EMS Control</p>
+            <p className="text-[13px] font-semibold leading-none text-white">Greenlens</p>
             <p className="text-[10px] leading-none text-white/75">{companyName}</p>
           </div>
         </div>
@@ -95,11 +96,11 @@ export default function DashboardShell({ companyName, children, footerActions }:
             {/* Header + close */}
             <div className="flex items-center justify-between pb-5 pl-1">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#7bdc93] text-[#234638] shadow-lg">
-                  <Leaf className="h-4 w-4" strokeWidth={2} />
+                <div className="relative h-7 w-7 shrink-0 rounded-full bg-[#7bdc93] shadow-lg overflow-hidden">
+                  <Image src="/greenlens-logo.png" alt="GreenLens AI" fill className="object-cover scale-[1]" />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <p className="text-[13px] font-semibold leading-none text-white">EMS Control</p>
+                  <p className="text-[13px] font-semibold leading-none text-white">Greenlens</p>
                   <p className="text-[10px] leading-none text-white/75">Energy Management</p>
                 </div>
               </div>
@@ -168,11 +169,11 @@ export default function DashboardShell({ companyName, children, footerActions }:
           className="hidden w-[220px] shrink-0 rounded-[22px] border border-[#315e4e] bg-[linear-gradient(180deg,#2d5d4c_0%,#255041_100%)] px-3 py-5 text-white shadow-[0_18px_60px_rgba(37,80,65,0.24)] lg:flex lg:flex-col"
         >
           <div className="flex items-center gap-3 pb-5 pl-1">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#7bdc93] text-[#234638] shadow-lg">
-              <Leaf className="h-4 w-4" strokeWidth={2} />
+            <div className="relative h-7 w-7 shrink-0 rounded-full bg-[#7bdc93] shadow-lg overflow-hidden">
+              <Image src="/greenlens-logo.png" alt="GreenLens AI" fill className="object-cover scale-[1]" />
             </div>
             <div className="flex flex-col gap-0.5">
-              <p className="text-[13px] font-semibold leading-none text-white">EMS Control</p>
+              <p className="text-[13px] font-semibold leading-none text-white">Greenlens</p>
               <p className="text-[10px] leading-none text-white/75">Energy Management</p>
             </div>
           </div>

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { useState } from 'react'
 import { Suspense } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 
 function SignupPageInner() {
@@ -47,11 +48,8 @@ function SignupPageInner() {
       {/* Mini nav */}
       <div className="glass-header px-8 py-4 flex items-center justify-start">
         <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(76,112,96,0.9)' }}>
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+          <div className="relative w-7 h-7 rounded-full bg-[#7bdc93] overflow-hidden shrink-0">
+            <Image src="/greenlens-logo.png" alt="GreenLens AI" fill className="object-cover scale-[1]" />
           </div>
           <span className="text-white font-medium text-sm tracking-tight">GreenLens AI</span>
         </Link>
@@ -70,14 +68,8 @@ function SignupPageInner() {
         >
           {/* Logo */}
           <div className="text-center mb-8">
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
-              style={{ background: 'rgba(76,112,96,0.85)' }}
-            >
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
+            <div className="relative w-12 h-12 rounded-full bg-[#7bdc93] overflow-hidden mx-auto mb-4">
+              <Image src="/greenlens-logo.png" alt="GreenLens AI" fill className="object-cover scale-[1]" />
             </div>
             <h1 className="text-2xl font-medium text-white tracking-tight">Create your account</h1>
             <p className="mt-1.5 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
